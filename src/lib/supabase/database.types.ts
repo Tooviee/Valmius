@@ -156,6 +156,14 @@ export type Database = {
         Args: { p_key: string; p_limit: number; p_window_seconds: number }
         Returns: boolean
       }
+      event_counts_by_day: {
+        Args: { p_since: string }
+        Returns: {
+          count: number
+          day: string
+          name: string
+        }[]
+      }
       purge_stale_rate_limits: { Args: never; Returns: undefined }
     }
     Enums: {
