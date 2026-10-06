@@ -1,0 +1,153 @@
+{
+  "title": "Support platform vendor breach at a B2B software company",
+  "type": "vendor_breach",
+  "summary": "The vendor behind the company's customer-support platform reports a breach late on a Friday, and three years of support tickets, attachments and pasted passwords may have been exposed. Enterprise contracts require notice within 72 hours, and two require it within 24. The exercise tests who takes command when the breach is at a vendor, how quickly the team can work out what the tickets contained, and who approves customer notices while the vendor's story keeps changing.",
+  "setting": {
+    "company_profile": "A B2B software company of about 40 people. The product runs on AWS, code lives in GitHub, staff work in Slack and Google Workspace, and all customer support runs through a hosted support platform connected to the customer database.",
+    "day_and_time": "Friday, 4:20 p.m., at the start of a three-day weekend, with the CEO on a flight until 9:00 p.m.",
+    "initial_signal": "The support lead receives an email from the customer-support platform vendor saying an unauthorized party accessed its systems and that some customers' tickets may have been viewed. Minutes later an enterprise customer asks in a shared Slack channel whether the company uses that vendor."
+  },
+  "roles": [
+    {
+      "name": "Incident Commander",
+      "responsibilities": "Takes command when the vendor's notice arrives, decides when the contract clocks started, and keeps a single list of open decisions and their owners."
+    },
+    {
+      "name": "Technical Lead",
+      "responsibilities": "Works out what the support platform holds and what it is connected to, and revokes or replaces the keys and connections that link it to the customer database, Slack and GitHub."
+    },
+    {
+      "name": "Communications Lead",
+      "responsibilities": "Writes the customer notices and the replies to the largest customer's security team, and keeps sales and support to one approved message."
+    },
+    {
+      "name": "Legal and Compliance Lead",
+      "responsibilities": "Works out which customer contracts require notice and by when, holds the vendor to its own contract, and is the contact for outside counsel."
+    },
+    {
+      "name": "Executive Sponsor",
+      "responsibilities": "Approves customer notices and any step that interrupts customers, such as revoking their keys, and names a backup for the hours when out of reach."
+    },
+    {
+      "name": "Scribe",
+      "responsibilities": "Keeps a timed log of what the vendor said, what was decided and by whom, so the company can show its work to customers and to its auditor."
+    }
+  ],
+  "objectives": [
+    "Decide who declares an incident and takes command when the breach is at a vendor and the notice arrives outside working hours.",
+    "Fix the moment the 72-hour and 24-hour contract clocks started, and name who approves customer notices and who is the backup.",
+    "Produce within the hour a list of the customer data and keys held in the support platform and the connections that must be cut or replaced.",
+    "Agree one message and one owner for customer communication, including what is said while the vendor's statements conflict."
+  ],
+  "injects": [
+    {
+      "index": 1,
+      "offset_minutes": 0,
+      "title": "A vendor notice arrives late on Friday",
+      "narrative": "At 4:20 p.m. the support lead receives an email from the security team at the customer-support platform vendor. It says an unauthorized party had access to part of the vendor's systems 'for a period of days', that ticket contents and attachments belonging to 'a subset of customers' may have been viewed, and that affected customers will be contacted individually 'in the coming days'. It asks for no action. All of the company's customer support runs through this platform. Within minutes an administrator at an enterprise customer posts the vendor's public statement in a shared Slack channel and asks whether the company uses this vendor. Half the staff have already left for the long weekend, and the CEO is on a flight until 9:00 p.m.",
+      "questions": [
+        "Does a vendor email saying the company 'may' be affected count as an incident under the plan, and who makes that call at 4:20 p.m. on a Friday?",
+        "Who is the incident commander when the breach is at a vendor and not in the company's own systems?",
+        "Who answers the customer in the shared Slack channel, and what may that person say before the facts are known?"
+      ],
+      "expected_actions": [
+        "Declare an incident, open a dedicated Slack channel, name the incident commander and scribe, and record 4:20 p.m. as the time the vendor's notice arrived.",
+        "Reply to the customer in Slack with a short holding message: the company does use the vendor, is investigating, and will give an update by a stated time.",
+        "The support lead opens an urgent case with the vendor's security contact asking whether the company's account is in the affected group and which dates are involved."
+      ],
+      "framework_refs": ["SOC 2 CC7.3", "PCI DSS 12.10.1"]
+    },
+    {
+      "index": 2,
+      "offset_minutes": 10,
+      "title": "What three years of tickets actually contain",
+      "narrative": "By 5:00 p.m. the support lead has looked through the platform. It holds about 38,000 tickets from 310 customers going back three years. A quick search turns up user lists that customers exported and attached, log files with their end users' names and email addresses, and at least 60 tickets where customers pasted passwords or API keys (passwords that let one system talk to another) for the company's product. The platform also stores a key of its own that lets support agents look up any account in the customer database, and it is connected to Slack and GitHub. The vendor has not said whether stored keys were exposed. Revoking the database key leaves weekend support without account lookup. Revoking the pasted customer keys would stop those customers' integrations without warning.",
+      "questions": [
+        "Who can authorize revoking the platform's key to the customer database tonight, knowing weekend support will work without account lookup?",
+        "Are the customer keys found in old tickets revoked now or only after each customer has been warned, and who decides while the CEO is in the air?",
+        "Who owns the list of what kinds of customer data sit in the support platform, and can it be produced tonight?"
+      ],
+      "expected_actions": [
+        "The technical lead revokes the support platform's key to the customer database and searches the access logs in AWS CloudWatch for lookups with that key that the support team did not make.",
+        "Disconnect the platform's Slack and GitHub connections until the vendor confirms stored keys are safe, and check in Slack and GitHub what each connection was allowed to read.",
+        "The support lead exports the tickets that contain pasted passwords or keys, with customer and date, so each key can be revoked and the customer told the same day."
+      ],
+      "framework_refs": ["SOC 2 CC7.4", "ISO 27001 A.5.26"]
+    },
+    {
+      "index": 3,
+      "offset_minutes": 22,
+      "title": "The contract clocks: 72 hours, and for two customers 24",
+      "narrative": "At 6:30 p.m. the operations lead, who manages contracts, finishes reading the eleven enterprise agreements. Nine require written notice 'without undue delay and no later than 72 hours after becoming aware' of a security incident affecting customer data, including one at a subprocessor (a vendor that handles customer data on the company's behalf). Two require notice within 24 hours, and nobody had been tracking those. If the company became aware at 4:20 p.m. today, the 24-hour notices are due tomorrow afternoon and the rest on Monday, a public holiday. If awareness begins only when the vendor confirms the company's tickets were accessed, no clock is running yet. Outside counsel's office is closed until Tuesday and the after-hours number goes to voicemail.",
+      "questions": [
+        "When did the company 'become aware': when the vendor's email arrived or when the vendor confirms the company's tickets were accessed, and who decides without counsel?",
+        "Do the two 24-hour customers get an early 'we may be affected' notice tomorrow, or do all enterprise customers hear at the same time?",
+        "Who approves the wording of a customer notice tonight, and who is the backup if that person cannot be reached?"
+      ],
+      "expected_actions": [
+        "The legal and compliance lead lists every contract with a notice clause in a Google Sheet: customer, deadline in hours, named contact, and the due time counted from 4:20 p.m. Friday.",
+        "Record in the incident log the decision to count from the vendor's first email, the earliest and safest reading, and leave a detailed message for outside counsel.",
+        "Draft a first notice tonight that states what is known, what is not yet known and when the next update will come, ready for approval when the CEO lands at 9:00 p.m."
+      ],
+      "framework_refs": ["SOC 2 CC7.4", "NIST 800-171 3.6.2"]
+    },
+    {
+      "index": 4,
+      "offset_minutes": 34,
+      "title": "Two answers from the vendor that do not match",
+      "narrative": "On Saturday at 10:00 a.m. the vendor's account manager replies to the support lead: 'I checked with our team and your account is not on the affected list.' At 11:10 a.m. a formal notice from the vendor's security team reaches the same inbox. It says the company's account was among those accessed during a 17-day period last month and that ticket text and attachments 'were accessible'. There is no evidence that stored keys were taken, it adds, 'but this cannot be ruled out'. It does not say whether the intruder could see only tickets from those 17 days or everything stored in the account. The vendor's public status page still says 'a small number of customers'. The first 24-hour deadline is about five hours away.",
+      "questions": [
+        "Which of the vendor's statements does the company act on, and who decides that the formal notice outweighs the account manager's reassurance?",
+        "Does the first customer notice go out now with what is known, or wait for the vendor to say which tickets were opened?",
+        "What exactly does the company ask the vendor for under its contract, and who sends that request today?"
+      ],
+      "expected_actions": [
+        "Treat the formal notice as the working truth, log both statements with their times, and ask the vendor in writing to explain the difference.",
+        "The legal and compliance lead sends the vendor a written request under the contract's security incident clause for the list of tickets and attachments opened and the access records for the company's account.",
+        "Send the first notice to the two 24-hour customers before 4:20 p.m., stating plainly that the scope is not yet confirmed."
+      ],
+      "framework_refs": ["SOC 2 CC7.3", "ISO 27001 A.5.26"]
+    },
+    {
+      "index": 5,
+      "offset_minutes": 46,
+      "title": "The largest customer's security team wants answers",
+      "narrative": "At 3:00 p.m. on Saturday the security team at the company's largest customer, worth nearly a fifth of revenue, emails the CEO. They have seen the news about the vendor. They attach a 22-question incident questionnaire due Monday at 9:00 a.m., ask for a call with 'your security officer', and say they will pause their rollout to 2,000 more users until they are satisfied. The company has no security officer. The sales lead for that customer has already drafted a reply saying 'we have confirmed we were not affected', based on the account manager's first email. Meanwhile the support lead has found that 14 of this customer's tickets include an exported list of about 2,300 of their employees' names and email addresses.",
+      "questions": [
+        "Who is the single named contact for this customer's security team, and who must review every answer before it is sent?",
+        "Does the company tell the customer about the exported employee list now, before the vendor confirms whether those tickets were opened?",
+        "Who stops the sales lead's 'not affected' reply from going out, and how does everyone who talks to customers learn the approved message?"
+      ],
+      "expected_actions": [
+        "Name one person to handle all contact with the customer's security team, and post in Slack that nobody else sends statements about the incident.",
+        "Send the customer written notice today covering the dates, the kinds of data in their tickets including the employee list, the keys already revoked, and the time of the next update.",
+        "Send the same core notice to every other enterprise customer and record the time each one was sent in the contract sheet."
+      ],
+      "framework_refs": ["SOC 2 CC7.4", "ISO 27001 A.5.26"]
+    },
+    {
+      "index": 6,
+      "offset_minutes": 58,
+      "title": "Tuesday: the customers nobody has told",
+      "narrative": "It is Tuesday morning after the holiday. All eleven enterprise notices went out on time. The vendor now confirms that ticket text in the company's account was viewed and says its review of attachment downloads will take ten more days. Three enterprise customers have asked exactly which of their tickets were opened, which the company cannot yet answer. The other 299 customers, on standard terms that promise notice 'without undue delay', have been told nothing, and one has just asked in a new ticket whether the company was affected. The platform still holds every old ticket, including those with pasted passwords. The auditor for the company's annual security audit has asked to see the incident record at next month's visit.",
+      "questions": [
+        "Who decides whether the 299 customers on standard terms are notified, and by what date?",
+        "What does the company tell customers who ask which of their tickets were opened while the vendor's answer is ten days away, and who commits to the next update?",
+        "Who owns reducing what the platform holds, and who assembles the incident record the auditor has asked for?"
+      ],
+      "expected_actions": [
+        "Email a notice to the admin contact of every remaining customer today, and give the support team a saved reply that matches it word for word.",
+        "Set a retention rule in the support platform to delete tickets and attachments older than an agreed age, and add a warning to the ticket form not to paste passwords or keys.",
+        "The scribe gathers the incident log, the vendor's notices, the contract sheet and a copy of every customer notice into one restricted folder in Google Drive."
+      ],
+      "framework_refs": ["SOC 2 CC7.5", "ISO 27001 A.5.27", "NIST CSF ID.IM-02"]
+    }
+  ],
+  "wrap_up_questions": [
+    "Which decisions this weekend already had an owner in the plan, and which did the group have to invent on the spot?",
+    "What could the group not find quickly: the contract notice clauses, the vendor's security contact, or a list of what the support platform holds?",
+    "What changes go into the response plan and the vendor list as a result?",
+    "Who owns each change, by what date, and who checks that it was made before the auditor's visit?"
+  ],
+  "estimated_duration_minutes": 80
+}

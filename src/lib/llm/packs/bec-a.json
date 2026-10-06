@@ -1,0 +1,154 @@
+{
+  "title": "Fake CEO wire request and a hidden forwarding rule at a B2B software company",
+  "type": "bec",
+  "summary": "During month-end close, an email that appears to come from the traveling CEO pushes finance to wire $48,500 before the bank's cutoff. The request is fake, but it quotes details that only someone reading the controller's Google Workspace mail could know. The exercise tests who can stop a payment, who can lock a finance mailbox when payroll depends on it, and when enterprise customers must be told.",
+  "setting": {
+    "company_profile": "A 40-person B2B software company. The product runs on AWS, code lives in GitHub, staff talk in Slack and email is on Google Workspace. A three-person finance team pays vendors through the bank's online portal, and enterprise customers' records sit in a production database.",
+    "day_and_time": "Thursday, 3:40 p.m., during month-end close, with the CEO on a flight until 9 p.m.",
+    "initial_signal": "The accounts payable specialist posts in the finance channel in Slack: the CEO has just emailed asking for a $48,500 wire to a new consulting firm before the bank's 5 p.m. cutoff, and the payment is in the bank portal waiting for the controller's approval."
+  },
+  "roles": [
+    {
+      "name": "Incident Commander",
+      "responsibilities": "Runs the response from the first Slack message, decides whether the payment request is an incident and assigns who calls the bank, who checks the mailbox and who briefs the CEO on landing."
+    },
+    {
+      "name": "Technical Lead",
+      "responsibilities": "Uses the Google Admin console to examine and lock down the controller's account, and checks whether the same mailbox opens the bank portal, the payroll service or AWS billing."
+    },
+    {
+      "name": "Communications Lead",
+      "responsibilities": "Writes the warning to all staff and any notice to customers, and makes sure nothing about the incident is sent through the affected mailbox."
+    },
+    {
+      "name": "Legal and Compliance Lead",
+      "responsibilities": "Reads the enterprise customer contracts for security-incident notice terms, tracks each deadline and keeps the record the auditor will ask for."
+    },
+    {
+      "name": "Executive Sponsor",
+      "responsibilities": "Stands in for the unreachable CEO to approve stopping payments, locking a finance account during month-end close and notifying customers."
+    },
+    {
+      "name": "Scribe",
+      "responsibilities": "Keeps a timestamped log of what was learned, what was decided and who decided it, starting with the minute the request was first questioned."
+    }
+  ],
+  "objectives": [
+    "Name who can cancel a pending payment in the bank portal and who calls the bank when the CEO cannot be reached.",
+    "Confirm that at least two people can lock a Google Workspace account and remove a forwarding rule, and that the steps are written down.",
+    "Decide who has authority to lock a finance mailbox during month-end close, and how payroll runs without it.",
+    "Decide who determines whether copied mail triggers the 72-hour notice in enterprise customer contracts, and who tracks the deadline.",
+    "Produce a timestamped record of the incident that could be handed to the company's auditor."
+  ],
+  "injects": [
+    {
+      "index": 1,
+      "offset_minutes": 0,
+      "title": "The CEO asks for an urgent wire",
+      "narrative": "At 3:40 p.m. the accounts payable specialist gets an email that appears to come from the CEO. It asks for a $48,500 wire to a consulting firm the company has never paid, calls the deal confidential and says the CEO is boarding a flight and cannot take calls. The specialist has already entered the wire in the bank portal, where it waits for the controller's approval, and has replied to the message twice. The bank's cutoff is 5 p.m. The controller notices that the sender's name is the CEO's but the email address is not a company address. The specialist points out that the CEO has sent urgent requests from a personal address before. The CEO's calendar shows a flight that lands at 9 p.m.",
+      "questions": [
+        "Who decides whether this wire is approved, held or cancelled before 5 p.m., and what is the rule when the person asking cannot be reached?",
+        "Is this a security incident or only a suspicious email, and who makes that call?",
+        "Who has to be told in the next ten minutes, and who tells them?"
+      ],
+      "expected_actions": [
+        "The controller rejects the pending wire in the bank portal and checks that no other payees or payments were added today.",
+        "The accounts payable specialist stops replying and leaves the message in the inbox so the Technical Lead can examine the original.",
+        "The Incident Commander opens an incident channel in Slack, names a scribe and tries to reach the CEO by text and through the CEO's assistant, not by replying to the email."
+      ],
+      "framework_refs": ["SOC 2 CC7.3", "PCI DSS 12.10.1"]
+    },
+    {
+      "index": 2,
+      "offset_minutes": 10,
+      "title": "The message knows too much",
+      "narrative": "By 3:55 p.m. the Technical Lead has confirmed that the sending address belongs to nobody at the company. It was set up to look like the CEO's personal address. That would make this a routine scam, except for what the message knows. It names a real consulting firm that the CEO and the controller discussed by email last week, quotes the exact amount of that firm's proposal and knows the CEO is flying today. None of this is public. The specialist's two replies also explained how wires get approved and named both approvers. In Slack, a sales manager mentions that a 'quick favor' email from the CEO arrived this morning and was ignored.",
+      "questions": [
+        "Whose mailbox is checked first, the CEO's or the controller's, and who has the Google Workspace administrator rights to do it?",
+        "If someone may be reading company email, which channel does the response team use from now on, and who tells staff?",
+        "What did the two replies give away about how payments are approved, and who tells the bank?"
+      ],
+      "expected_actions": [
+        "The Technical Lead opens the Google Admin console and reviews recent sign-ins, forwarding settings and filters on the CEO's and the controller's accounts.",
+        "The Communications Lead posts a warning in the company-wide Slack channel: do not act on any emailed request for a payment, gift cards or a change of bank details, and report any received today.",
+        "The controller phones the bank's fraud department, using the number shown in the bank portal, and asks the bank to confirm every outgoing wire by phone until further notice."
+      ],
+      "framework_refs": ["SOC 2 CC7.3", "SOC 2 CC7.4"]
+    },
+    {
+      "index": 3,
+      "offset_minutes": 22,
+      "title": "A forwarding filter nobody set up",
+      "narrative": "At 4:10 p.m. the Technical Lead finds a filter in the controller's Gmail settings that the controller has never seen. Every message containing the words invoice, wire, payment or bank is copied to an outside address and marked as read. The Google Admin console shows that forwarding to that address was switched on 41 days ago. The controller now recalls approving a sign-in prompt on a phone around then without knowing what it was for. This mailbox is also where password reset links arrive for the bank portal, the payroll service and AWS billing. Month-end close is under way, payroll is due by noon tomorrow, and the controller says both will slip without email tonight.",
+      "questions": [
+        "Who has the authority to lock the controller's account tonight, knowing it delays month-end close and puts tomorrow's payroll at risk?",
+        "What has to be recorded about the forwarding filter before it is removed, and who records it?",
+        "Which logins that reset through this mailbox get new passwords first (bank portal, payroll service, AWS billing), and who changes each one?"
+      ],
+      "expected_actions": [
+        "The Technical Lead takes screenshots of the filter and the forwarding address, then removes both, resets the password, signs the account out on every device and removes any connected apps the controller does not recognize.",
+        "The controller changes the passwords for the bank portal, the payroll service and AWS billing from a different computer and confirms that each asks for a second sign-in step.",
+        "The Executive Sponsor names who submits payroll tomorrow if the controller's account is still locked, and with which login."
+      ],
+      "framework_refs": ["SOC 2 CC7.4", "ISO 27001 A.5.26"]
+    },
+    {
+      "index": 4,
+      "offset_minutes": 34,
+      "title": "The logs do not go back far enough",
+      "narrative": "At 4:30 p.m. the Technical Lead reports what the logs can and cannot show. Forwarding has been on for 41 days, but the detailed email log in the Google Admin console reaches back only 30. For those 30 days it lists 212 forwarded messages, including signed customer order forms and bank notices. The sign-in history shows the controller's account opened from two cities. The controller was on vacation in one and has never visited the other. A senior engineer says no customer data is involved, because customer data lives in the production database on AWS. The controller then remembers a spreadsheet exported from that database and emailed over for a billing check, with names, work emails and contract values for about 300 customer contacts.",
+      "questions": [
+        "With eleven days of forwarding that no log covers, do we assume everything in the mailbox was read, and who makes that decision?",
+        "Who decides whether a spreadsheet of customer contacts counts as customer data under our contracts?",
+        "Do we call outside legal counsel or an investigation firm tonight, and who can approve the cost?"
+      ],
+      "expected_actions": [
+        "The Technical Lead exports the 30-day email log and the full sign-in history from the Google Admin console and saves both to a restricted folder in Google Drive before older entries drop off.",
+        "The Legal and Compliance Lead treats the whole mailbox as read for the past 41 days, lists what it held (customer contracts, the contact spreadsheet, payroll reports, bank notices) and marks each item that carries a duty to notify someone.",
+        "The Executive Sponsor phones the company's outside lawyer tonight, asks whether an investigation firm should be brought in and approves the cost if so."
+      ],
+      "framework_refs": ["SOC 2 CC7.3", "ISO 27001 A.5.24", "NIST 800-171 3.6.2"]
+    },
+    {
+      "index": 5,
+      "offset_minutes": 46,
+      "title": "Two customer contracts start a 72-hour clock",
+      "narrative": "At 9:20 p.m. the CEO lands and joins the call. By now the Legal and Compliance Lead has read the contracts. The two largest enterprise customers must get written notice within 72 hours of the company becoming aware of a security incident involving their data, and one contract names a security contact who must also be phoned. Order forms and contact details for both are among the forwarded messages. One of the two is due to sign a renewal next week, and the head of sales asks to hold off until it is signed. The CEO agrees: 'We tell customers nothing until we know exactly what was taken.' Nobody can say when that will be.",
+      "questions": [
+        "When did the 72 hours start: at the fake request, when the forwarding filter was found, or when customer documents turned up in the forwarded mail?",
+        "Who has the final say on notifying customers when the CEO and the contracts point in different directions?",
+        "Who writes the notice, who signs it, and what does it say about what we do not yet know?"
+      ],
+      "expected_actions": [
+        "The Legal and Compliance Lead writes down the time the company became aware and the resulting deadline for each customer, and posts both in the incident channel.",
+        "The Communications Lead drafts a short factual notice (what happened, what is known, what is being done, when the next update will come) for the Executive Sponsor to approve.",
+        "The Executive Sponsor confirms with the CEO that both notices go out inside the 72 hours, renewal or not, and the Scribe records who decided."
+      ],
+      "framework_refs": ["SOC 2 CC7.4", "NIST 800-171 3.6.2"]
+    },
+    {
+      "index": 6,
+      "offset_minutes": 58,
+      "title": "Finance wants its mailbox back and a customer asks about incidents",
+      "narrative": "The next morning at 9 a.m. the controller's account, reset and locked overnight, is still off limits, and payroll is due at noon. The Technical Lead has checked the Google accounts of the finance team and the CEO and found nothing else, but has not looked at any other accounts or at sign-ins to GitHub and AWS. The controller wants the mailbox back now. Then the customer whose renewal is due next week sends its yearly security questionnaire, to be returned by Monday. One question asks whether the company has had a security incident in the past 12 months. The head of sales has already typed 'No'. The auditor who reviews the company's security controls each year will ask to see the incident record too.",
+      "questions": [
+        "What must be true before the controller's account is switched back on, and who signs off?",
+        "Who answers the customer's security questionnaire, and what does the answer say about this week?",
+        "Which changes do we commit to today, such as a confirming phone call for every new payee and a block on automatic mail forwarding, and who owns each?"
+      ],
+      "expected_actions": [
+        "The Technical Lead restores the controller's account only after confirming a new password, a freshly set up two-step sign-in, no forwarding and no unknown connected apps, and notes each check in the incident record.",
+        "The Legal and Compliance Lead takes over the questionnaire, answers the incident question accurately and finishes the incident record (timeline, decisions, notices sent) for the auditor.",
+        "The Technical Lead turns off automatic mail forwarding for all users in the Google Admin console and sets a date to review sign-ins on the remaining accounts, GitHub and AWS."
+      ],
+      "framework_refs": ["SOC 2 CC7.5", "ISO 27001 A.5.27", "PCI DSS 12.10.6"]
+    }
+  ],
+  "wrap_up_questions": [
+    "Which decisions today had a clear owner in the plan, and which were made by whoever happened to be on the call?",
+    "What was missing when we needed it: the bank's fraud line, a second Google Workspace administrator, a list of customer contracts with notice deadlines?",
+    "What do we change in the plan and in the payment process, for example a confirming phone call for new payees and a company-wide block on automatic mail forwarding?",
+    "Who owns each change, and by what date will it be done?"
+  ],
+  "estimated_duration_minutes": 75
+}

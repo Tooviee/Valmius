@@ -1,0 +1,154 @@
+{
+  "title": "Ransomware on the build server and internal file share at a B2B software company",
+  "type": "ransomware",
+  "summary": "Three days before a release promised to its largest customer, a software company finds its build server and internal file share in AWS encrypted, with a ransom note. The build server holds the credentials that deploy to production, no restore has ever been tested, and the attackers claim to have copied customer data. The exercise tests who can freeze deployments, how the team recovers without a proven backup, and how it meets customer notice deadlines on incomplete facts.",
+  "setting": {
+    "company_profile": "A 40-person B2B software company. Its product and customer database run in AWS, code lives in GitHub, and staff work in Slack and Google Workspace. A build server and an internal file share also run in AWS.",
+    "day_and_time": "Tuesday, 11:40 p.m., three days before a release promised to the largest customer",
+    "initial_signal": "The nightly build fails and pages the on-call engineer. On the build server, files have been renamed and will not open, and every folder holds a note demanding payment. The internal file share looks the same."
+  },
+  "roles": [
+    {
+      "name": "Incident Commander",
+      "responsibilities": "Runs the response from the first page, decides when deployments are frozen, and keeps one list of open decisions and their owners."
+    },
+    {
+      "name": "Technical Lead",
+      "responsibilities": "Isolates the build server and file share in AWS, replaces the credentials they held, and reports what the logs can and cannot show."
+    },
+    {
+      "name": "Communications Lead",
+      "responsibilities": "Writes the updates for staff and for customers waiting on Friday's release, and makes sure nothing goes out unapproved."
+    },
+    {
+      "name": "Legal and Compliance Lead",
+      "responsibilities": "Reads the customer contracts and the cyber insurance policy for notice deadlines and conditions, and keeps the record the auditor will ask for."
+    },
+    {
+      "name": "Executive Sponsor",
+      "responsibilities": "Decides whether the release slips, approves outside spending, and makes the final call on the ransom demand."
+    },
+    {
+      "name": "Scribe",
+      "responsibilities": "Keeps a timestamped log of what was known, what was decided and by whom, in a document stored outside the affected servers."
+    }
+  ],
+  "objectives": [
+    "Name who has authority to freeze all deployments and replace production credentials when a customer release is at stake.",
+    "Decide how servers in AWS are isolated at night without destroying evidence that investigators will need.",
+    "Confirm whether the plan says how to recover the build server and file share when no restore has ever been tested.",
+    "Identify which customer contracts set a notice deadline, when each clock starts and who sends the notice.",
+    "Decide who must be consulted before any ransom payment and who makes the final decision."
+  ],
+  "injects": [
+    {
+      "index": 1,
+      "offset_minutes": 0,
+      "title": "The nightly build fails and a ransom note is on the server",
+      "narrative": "At 11:40 p.m. on Tuesday a failed nightly build pages the on-call engineer, who finds the build server full of renamed files that will not open. The build server compiles the product from GitHub and deploys it to AWS. The internal file share, a second server in AWS that engineering and customer success use for onboarding files and customer data exports, is in the same state. A note in every folder demands payment within 72 hours and says files were copied before they were encrypted (scrambled so they cannot be opened). The product and the customer database look normal. The CTO is on an overnight flight until 6:00 a.m. The engineer asks in Slack whether to shut both servers down.",
+      "questions": [
+        "Who declares this an incident tonight, and who takes charge while the CTO is in the air?",
+        "Does the on-call engineer have authority to cut both servers off alone, and should they be shut down, isolated or left running?",
+        "Who gets woken up now, and what waits until morning?"
+      ],
+      "expected_actions": [
+        "Name an Incident Commander tonight and open a dedicated incident channel in Slack, with a phone bridge ready in case Slack cannot be trusted.",
+        "Have the on-call engineer isolate both servers in the AWS console by changing their security groups (the firewall rules around each server) instead of stopping or deleting them, so evidence is kept.",
+        "Take a snapshot (a point-in-time copy) of each server's disks in AWS before anything else is changed, and log the time and who did it."
+      ],
+      "framework_refs": ["SOC 2 CC7.3", "PCI DSS 12.10.1"]
+    },
+    {
+      "index": 2,
+      "offset_minutes": 10,
+      "title": "The build server holds the keys to production",
+      "narrative": "By 12:30 a.m. both servers are cut off from the network. The engineer lists what was stored on the build server: the AWS access keys that deploy to production, and a GitHub token that can change code in every repository. Nothing in production looks wrong, but nobody can say whether those credentials were copied. Replacing them and freezing deployments will break the release process for at least a day and put Friday's release at risk. The head of customer success, online late preparing for the release, writes in the incident channel that the largest customer's renewal depends on Friday and asks the team not to do anything that delays it. The CTO cannot be reached for another five hours.",
+      "questions": [
+        "Who has authority to freeze all deployments and replace production credentials tonight, knowing the release may slip?",
+        "Do you treat production and the customer database as possibly compromised, and what do you check first to find out?",
+        "Who tells the largest customer that Friday is at risk, and when?"
+      ],
+      "expected_actions": [
+        "Freeze deployments and replace the AWS access keys and the GitHub token the build server held, starting with those that can reach production and the customer database.",
+        "Search AWS CloudTrail (the record of actions in the AWS account) and the GitHub audit log for any use of those credentials in the past week, and note what the logs do not cover.",
+        "Have the Executive Sponsor decide by morning whether the release date moves, and record the decision and the reason."
+      ],
+      "framework_refs": ["SOC 2 CC7.4", "ISO 27001 A.5.26"]
+    },
+    {
+      "index": 3,
+      "offset_minutes": 22,
+      "title": "The first restore the company has ever tried",
+      "narrative": "At 7:30 a.m. on Wednesday the CTO is back on the ground. AWS Backup has shown its nightly job as Completed for 14 months, and the company tells customers in security questionnaires that restores are tested every year. In fact, no restore has ever been run. This morning's first attempt brings back the build server and the file share's system disk. The file share's data is missing: it was moved to a larger disk eight months ago, and the new disk was never added to the backup plan. The only other copy is a snapshot taken on the day of that move. The build server can be rebuilt from GitHub in about two days. Eight months of onboarding files and customer data exports exist nowhere else.",
+      "questions": [
+        "Who decides whether losing eight months of file share contents is acceptable, and which teams must be asked first?",
+        "Do you rebuild the build server from scratch or use the restored copy, which may still contain whatever let the attackers in?",
+        "What gets rebuilt first, and who sets that order with Friday's release in mind?"
+      ],
+      "expected_actions": [
+        "Restore the eight-month-old snapshot to a new, isolated disk and have customer success list what has been added since.",
+        "Rebuild the build server from a clean image and the code in GitHub, with new credentials, instead of reusing the restored copy.",
+        "Check that the customer database's backups in AWS are complete and run one test restore of it today, with a named owner."
+      ],
+      "framework_refs": ["SOC 2 CC7.5", "ISO 27001 A.5.24", "NIST CSF ID.IM-04"]
+    },
+    {
+      "index": 4,
+      "offset_minutes": 35,
+      "title": "The attackers send a file list, and the logs cannot settle it",
+      "narrative": "At 11:00 a.m. an email reaches the company's support address with a list of about 3,000 file names said to be taken from the file share. The CTO recognizes folders of data exports prepared for two enterprise customers, one of them the largest, holding their users' names, email addresses and billing contacts. Yet AWS CloudTrail shows no unusual use of the build server's credentials, and the company never switched on the network logging that would show whether large amounts of data left AWS. One engineer says the list proves theft. Another says it only proves the attackers could see the folders, not that they copied anything. The 72 hours in the note run out on Friday night.",
+      "questions": [
+        "Do you treat this as a confirmed loss of customer data, a suspected one, or neither, and who makes that call?",
+        "What evidence would settle it, and who can get it: your own team or an outside forensic firm?",
+        "Who produces the list of customers whose data was on the file share, and by when?"
+      ],
+      "expected_actions": [
+        "Record a decision to treat customer data as possibly copied until evidence shows otherwise, with the time and the facts known.",
+        "Use the eight-month-old snapshot and customer success's own records to list which customers had files on the share and what personal data those files held.",
+        "Keep the email with its full headers, do not reply to it, and pass it to counsel before anyone else responds."
+      ],
+      "framework_refs": ["SOC 2 CC7.3", "NIST 800-171 3.6.2"]
+    },
+    {
+      "index": 5,
+      "offset_minutes": 48,
+      "title": "The largest customer asks a direct question, and the insurer has rules",
+      "narrative": "At 2:15 p.m. the largest customer's security team, told this morning that Friday's release may slip, asks by email whether a security incident is the reason. Their contract requires notice within 72 hours of the company becoming aware of an incident that may affect their data. The other customer on the attackers' list has a 48-hour clause. Meanwhile the finance lead reads the cyber insurance policy for the first time: the insurer must be told before any outside firm is hired, and only its approved investigators and lawyers are covered. At noon the CTO signed an agreement with a forensic firm (outside investigators) that a board member recommended, and that firm has already started work.",
+      "questions": [
+        "When did the contract clocks start: at 11:40 p.m. on Tuesday or when the file list arrived, and who decides?",
+        "Who answers the customer today, and what do you say while the facts are incomplete?",
+        "Who calls the insurer, and what happens to the forensic firm already hired?"
+      ],
+      "expected_actions": [
+        "Call the insurer's claims line now, report the incident and the firm already hired, and ask for approval or a switch in writing.",
+        "Have the Legal and Compliance Lead list every customer contract with a notice clause, its deadline and its named contact, counting from 11:40 p.m. on Tuesday as the safest start.",
+        "Send the largest customer a short factual reply approved by counsel: what happened, what is known and not known about their data, and when the next update will come."
+      ],
+      "framework_refs": ["SOC 2 CC7.4", "NIST 800-171 3.6.2"]
+    },
+    {
+      "index": 6,
+      "offset_minutes": 60,
+      "title": "A price, a deadline and an audit three weeks away",
+      "narrative": "By Thursday at 4:00 p.m. the investigators know how the attackers got in: a contractor's login on the build server that was never removed when the contract ended in March. Production and the customer database show no sign of access. The attackers now offer to delete what they took and supply an unlock key for $150,000 if paid by Friday night; otherwise they will publish the files and email the customers named in them. The insurer will consider covering a payment only if it approves it first. The CEO leans toward paying to protect the renewal. Counted from Tuesday night, the 48-hour contract deadline passes tonight, and the auditor's visit for this year's security audit is three weeks away.",
+      "questions": [
+        "Who has the final say on paying the $150,000, and who must be consulted first: counsel, the insurer, the board?",
+        "If you do not pay, what do the two customers hear from you before the attackers contact them?",
+        "What record of this incident goes to the auditor, and who owns finding other leftover logins like the contractor's?"
+      ],
+      "expected_actions": [
+        "Ask counsel whether paying would be lawful (some attacker groups are under government sanctions) and ask the insurer whether it would be covered, both in writing, before the CEO decides.",
+        "Notify both named customers today, before the 48-hour deadline and before the attackers reach them, with the list of their affected files and one named contact.",
+        "Remove the contractor's login, compare every account in AWS, GitHub and on the build server against the current staff list, and file the Scribe's timeline as the incident record for the auditor."
+      ],
+      "framework_refs": ["SOC 2 CC7.4", "SOC 2 CC7.5", "ISO 27001 A.5.27"]
+    }
+  ],
+  "wrap_up_questions": [
+    "Which of these decisions had a clear owner in your plan and went smoothly, and which did the group have to invent on the spot?",
+    "What did the team reach for and not find: a tested restore, logs that show data leaving, a list of customer notice deadlines, the insurer's claims number?",
+    "What will you change in the plan and in AWS, GitHub and the backup setup, in priority order?",
+    "Who is the named owner of each change, and when will someone check that it was done?"
+  ],
+  "estimated_duration_minutes": 80
+}

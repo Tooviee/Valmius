@@ -1,0 +1,154 @@
+{
+  "title": "E-signature provider breach at an accounting firm in deadline week",
+  "type": "vendor_breach",
+  "summary": "Clients of an accounting firm start receiving fake 'documents ready to sign' emails that quote real document titles. The company then finds a vague breach notice from its e-signature provider that has sat unread for four days. With a tax filing deadline nine days away, the exercise tests who owns vendor accounts and their security notices, when to call the cyber insurer, and how to meet the notice clauses in client engagement letters when the facts are incomplete.",
+  "setting": {
+    "company_profile": "An accounting firm of about 25 people with no servers of its own. It runs on Microsoft 365, a client document portal, a practice-management system and an e-signature service, and an outside IT provider looks after it under a monthly contract.",
+    "day_and_time": "Tuesday, 9:40 a.m., nine days before the extended tax filing deadline",
+    "initial_signal": "A client's bookkeeper phones the front desk about an email saying documents from the company are ready to sign. It quotes the title of a real engagement letter, but the link opened a page asking for her email password. Two more clients forward similar emails within 20 minutes."
+  },
+  "roles": [
+    {
+      "name": "Incident Commander",
+      "responsibilities": "Takes charge from the first client call, pulls the partners in, and decides whether the company treats itself as affected before the e-signature provider confirms it."
+    },
+    {
+      "name": "Technical Lead",
+      "responsibilities": "Directs the outside IT provider, regains control of the e-signature account, and disconnects it from the client document portal and the practice-management system."
+    },
+    {
+      "name": "Communications Lead",
+      "responsibilities": "Warns clients about the fake signing emails, tells staff how to collect signatures this week, and gives partners one script for client calls."
+    },
+    {
+      "name": "Legal and Compliance Lead",
+      "responsibilities": "Reads the engagement letters and the cyber insurance policy, reports to the insurer's hotline, and works with the breach coach on notice wording and deadlines."
+    },
+    {
+      "name": "Executive Sponsor",
+      "responsibilities": "Approves spending on outside help, makes the final call when partners disagree about pausing e-signatures or telling clients, and signs the insurance renewal form."
+    },
+    {
+      "name": "Scribe",
+      "responsibilities": "Keeps the timed log, including when the e-signature provider's notice arrived and when it was first read, because the deadlines and the insurance claim depend on those times."
+    }
+  ],
+  "objectives": [
+    "Confirm that every vendor's security notices go to a mailbox someone reads, and that each vendor account has a current, named administrator.",
+    "Decide who can send an urgent warning to every client, and how that differs from a formal breach notice.",
+    "Decide who reports to the cyber insurer and at what point, and who can approve outside help before the insurer consents.",
+    "Decide who can pause a client-facing service in the week before a filing deadline, and what staff use in its place.",
+    "Settle whether an unread vendor notice counts as discovery, work out the engagement-letter deadlines from that date, and name who signs client notices."
+  ],
+  "injects": [
+    {
+      "index": 1,
+      "offset_minutes": 0,
+      "title": "A client asks whether a signing email is real",
+      "narrative": "At 9:40 a.m. a client's bookkeeper phones the front desk. She has received an email saying documents from the company are ready to sign. It quotes the title of an engagement letter she really did sign in March, but the link opened a page asking for her email password. She closed it. She thinks her boss received the same email and may have typed his password in. By 10:00 a.m. two more clients have forwarded similar emails. The partners are in client meetings until 11:00 a.m., and everyone else is working flat out toward next Thursday's filing deadline. The company has no IT staff of its own; an outside IT provider looks after Microsoft 365 under a monthly contract.",
+      "questions": [
+        "Who does the receptionist tell, and who has the authority to pull a partner out of a client meeting for this?",
+        "Who is allowed to send a message to every client, and can that happen while the partners are still in meetings?",
+        "Who calls the outside IT provider, and does the monthly contract cover this kind of work?"
+      ],
+      "expected_actions": [
+        "The office manager takes charge as incident commander, starts a timed log, and interrupts one partner's meeting to brief them.",
+        "Call the outside IT provider's emergency line and ask them to check the Microsoft 365 sign-in logs for the company's mailboxes and to block the fake sender's address.",
+        "Ask each reporting client to forward the fake email as an attachment, and tell the bookkeeper to have her boss change his email password now."
+      ],
+      "framework_refs": ["SOC 2 CC7.3", "NIST 800-171 3.6.1"]
+    },
+    {
+      "index": 2,
+      "offset_minutes": 12,
+      "title": "The e-signature provider's notice has sat unread since Friday",
+      "narrative": "At 10:30 a.m. the office manager searches the mail system for the e-signature provider's name and finds a security notice delivered last Friday at 6:12 p.m. It went to the address of a staff accountant who left in June and whose mail forwards to a shared mailbox nobody checks. She was also the only administrator on the e-signature account. The notice says an unauthorized party accessed a system holding 'account information and a limited number of completed documents for certain customers', that all customers are being told 'out of caution', and that affected customers will receive a second message. No second message can be found. The account holds about 1,900 signed documents from four years: engagement letters, bank authorizations and tax filing authorizations that carry Social Security numbers.",
+      "questions": [
+        "Does the company treat itself as affected because of the fake emails, or wait for the e-signature provider to confirm, and who decides?",
+        "Who takes over as administrator of the e-signature account today, and how does the company prove to the e-signature provider that it owns the account?",
+        "If someone proposes deleting all 1,900 documents from the account right now, who decides, and what has to be saved first?"
+      ],
+      "expected_actions": [
+        "Use the e-signature provider's account recovery process to regain administrator access, set a new password, turn on two-step sign-in and remove the former employee's login.",
+        "Write to the e-signature provider's security team from a partner's address, quoting the notice's reference number, and ask which of the company's documents were accessed and when.",
+        "Download the account's document list and activity history, and count how many documents carry Social Security numbers or bank details."
+      ],
+      "framework_refs": ["SOC 2 CC7.3", "ISO 27001 A.5.24"]
+    },
+    {
+      "index": 3,
+      "offset_minutes": 24,
+      "title": "The insurer's hotline says to wait",
+      "narrative": "At 10:50 a.m. the managing partner comes out of a meeting and wants an email sent to all 400 clients at once. The office manager has found the cyber insurance policy. Its first page says any suspected incident must be reported 'as soon as practicable' to a 24-hour hotline, and that investigators hired without the insurer's consent may not be paid for. The hotline takes the report and says a breach coach (a lawyer the insurer provides to direct the response) will call back within four hours, and asks that no notices go out until then. Nine clients have now reported fake emails. The policy's renewal questionnaire is due Friday. It asks about security incidents in the past 12 months and whether departed employees' access is removed promptly, to which the company answered yes last year.",
+      "questions": [
+        "Does the company wait up to four hours for the breach coach before warning clients, while fake emails keep arriving, and who decides?",
+        "Who tells the insurer that the outside IT provider is already at work, and does that work continue before the insurer consents?",
+        "How does the company answer the renewal questions about incidents and departed employees' access, and who signs the form?"
+      ],
+      "expected_actions": [
+        "Tell the hotline that a two-line safety warning about the fake signing emails is going to clients now, send it from the company's Microsoft 365 address, and keep the formal notice for the breach coach to review.",
+        "Email the insurer's claims contact that the existing IT provider is already checking Microsoft 365, and ask for written consent to continue.",
+        "Hold the renewal questionnaire and tell the insurance broker today that an incident is under review, so that the answers given on Friday are accurate."
+      ],
+      "framework_refs": ["SOC 2 CC7.4", "NIST 800-171 3.6.2"]
+    },
+    {
+      "index": 4,
+      "offset_minutes": 36,
+      "title": "Pause e-signatures in deadline week?",
+      "narrative": "At 1:15 p.m. the outside IT provider reports back. Microsoft 365 shows no unusual sign-ins to staff mailboxes, so the client names and document titles most likely came from the e-signature provider's side, but the IT provider cannot see inside that service. It recommends pausing all signature requests and disconnecting the service from the client document portal and the practice-management system, where it files signed copies automatically. That would hurt: 140 clients still have to sign tax filing authorizations before next Thursday, and every genuine signing email the company sends now looks exactly like the fake ones. Collecting signatures another way could leave 30 to 40 returns late. The IT provider adds that this work falls outside the monthly contract, costs $225 an hour, and needs a partner's written approval.",
+      "questions": [
+        "Who decides whether to pause signature requests in the busiest week of the season, and what do staff use instead?",
+        "How will a client tell a genuine signing request from a fake one for the rest of this week?",
+        "Who can approve the IT provider's extra work, and up to what amount without asking the other partners?"
+      ],
+      "expected_actions": [
+        "Disconnect the e-signature service from the client document portal and the practice-management system, and change the passwords those connections used.",
+        "Move this week's signatures to the client document portal, and tell clients by email and phone that the company will send no signing links by email until further notice.",
+        "A partner approves the IT provider's work in writing with a spending cap, and the scribe files the approval with the insurer's claim reference."
+      ],
+      "framework_refs": ["SOC 2 CC7.4", "ISO 27001 A.5.26"]
+    },
+    {
+      "index": 5,
+      "offset_minutes": 48,
+      "title": "Three business days, counted from when?",
+      "narrative": "At 3:30 p.m. the e-signature provider replies to the company's request: its account 'was among those accessed'. Document titles, signer names and email addresses were viewed. Whether completed documents were downloaded is 'still being determined', with an update in seven to ten days. The partner who handles contracts has reread the engagement letters. Those of the six largest clients require written notice 'within three business days of discovering unauthorized access to client information, including at a service provider'. Counted from Friday's unread notice, that deadline is tomorrow; counted from today, it is Friday. One partner argues nothing should go out until after next Thursday's filing deadline, because frightened clients will stop signing anything. Another wants every client told today. The breach coach is on the phone but has not seen the letters.",
+      "questions": [
+        "Which discovery date does the company use for the three-business-day clause, Friday or today, and who decides with the breach coach?",
+        "When two partners disagree about telling clients before the filing deadline, who makes the final call?",
+        "What does the notice say about Social Security numbers when the e-signature provider's answer is seven to ten days away?"
+      ],
+      "expected_actions": [
+        "Count the deadline from Friday, the safer date, and send written notice to the six clients by tomorrow, with the breach coach reviewing the wording tonight.",
+        "State in the notice what was viewed, that downloads are not yet confirmed either way, which kinds of documents the account holds, and the date of the next update.",
+        "List in a spreadsheet every client with documents in the account, the document types and whether a notice clause applies, taking contacts from the practice-management system."
+      ],
+      "framework_refs": ["SOC 2 CC7.4", "NIST 800-171 3.6.2"]
+    },
+    {
+      "index": 6,
+      "offset_minutes": 62,
+      "title": "Ten days later: 312 documents were downloaded",
+      "narrative": "It is the Friday after the filing deadline. The e-signature provider confirms that 312 of the company's completed documents were downloaded, including 118 tax filing authorizations carrying Social Security numbers. The people named on them live in four states and are not all clients: some are clients' spouses and business co-owners whose addresses the company may not hold. The breach coach says state laws require letters to those individuals, and the earliest deadline is 30 days away. The insurer will pay for mailing and credit monitoring only through its approved suppliers. The partners would rather phone each client first. Meanwhile the e-signature provider's security notices still go to the former employee's address, and nobody has checked where the other vendors send theirs.",
+      "questions": [
+        "Who builds the list of affected people, including those who are not clients, and who checks addresses before anything is mailed?",
+        "Do partners phone clients before the letters arrive, and who makes sure every call says the same thing?",
+        "Who becomes the named owner of each vendor account and its security notices, and what happens when that person leaves?"
+      ],
+      "expected_actions": [
+        "Match the 312 documents to records in the practice-management system and build the mailing list by state, with the breach coach confirming each state's deadline.",
+        "Engage the insurer's approved mailing and credit monitoring suppliers through the breach coach, and give partners a one-page script for client calls.",
+        "Change the administrator and security contact on every vendor account to a shared mailbox that two named people check daily, and add that step to the staff departure checklist."
+      ],
+      "framework_refs": ["SOC 2 CC7.5", "ISO 27001 A.5.27", "NIST CSF ID.IM-04"]
+    }
+  ],
+  "wrap_up_questions": [
+    "What went well: which calls were made early enough to matter, such as to the IT provider, the insurer's hotline and the first client warning?",
+    "Where did the company depend on one person's memory or mailbox, and what would have happened if the office manager had been away this week?",
+    "What has to change in the response plan, the vendor list and the staff departure checklist?",
+    "Which partner owns each change, by what date, and who confirms it is done before the insurance renewal is signed?"
+  ],
+  "estimated_duration_minutes": 85
+}

@@ -1,0 +1,150 @@
+{
+  "title": "Ransomware syncs from one laptop into Microsoft 365 client folders at an accounting firm",
+  "type": "ransomware",
+  "summary": "Nine days before the tax filing deadline, an accounting firm finds its client folders in Microsoft 365 encrypted: one laptop was hit over the weekend and its sync copied the damage into the shared libraries. The outside IT provider leads the fix, but the separate backup of Microsoft 365 covers less than everyone believed. The exercise tests who directs the IT provider, what the firm tells its insurer and clients, and who decides on the ransom.",
+  "setting": {
+    "company_profile": "A 25-person accounting firm with no servers of its own. Client files live in Microsoft 365, clients exchange documents through a client portal, returns are prepared in cloud tax and practice-management software, and an outside IT provider manages the laptops and Microsoft 365.",
+    "day_and_time": "Monday, 8:40 a.m., nine days before the tax filing deadline",
+    "initial_signal": "A staff accountant opens a client folder in the shared Microsoft 365 library and none of the files will open. Every folder holds the same new text file, demanding payment to unlock the firm's files."
+  },
+  "roles": [
+    {
+      "name": "Incident Commander",
+      "responsibilities": "Runs the response from the first report, decides when staff stop and restart work, and keeps the written log of decisions the insurer will ask for."
+    },
+    {
+      "name": "Technical Lead",
+      "responsibilities": "Directs the outside IT provider, approves or refuses what it proposes to do to laptops and Microsoft 365, and checks what it reports."
+    },
+    {
+      "name": "Communications Lead",
+      "responsibilities": "Tells staff what to do and drafts every message to clients, including those who saw the ransom note in the client portal."
+    },
+    {
+      "name": "Legal and Compliance Lead",
+      "responsibilities": "Reads the cyber insurance policy and the engagement letters, calls the insurer and counsel, and tracks each notice deadline."
+    },
+    {
+      "name": "Executive Sponsor",
+      "responsibilities": "Speaks for the partners, approves spending and commitments to clients, and leads the decision on the ransom demand."
+    }
+  ],
+  "objectives": [
+    "Name who can tell all staff to stop work in Microsoft 365 before the outside IT provider has responded.",
+    "Decide who at the firm directs the IT provider during an incident and who can refuse a step such as wiping a laptop.",
+    "Establish what the firm can restore from Microsoft 365 itself, how long it takes, and what the separate Microsoft 365 backup really covers.",
+    "Identify who calls the cyber insurer, when, and which steps need the insurer's approval first.",
+    "Decide who approves messages to clients and which engagement letters set a deadline for them."
+  ],
+  "injects": [
+    {
+      "index": 1,
+      "offset_minutes": 0,
+      "title": "Client folders will not open, and the IT provider is in a queue",
+      "narrative": "Monday, 8:40 a.m. Within minutes, three staff report the same thing: files in the shared client library in Microsoft 365 will not open, and each folder holds a new text file demanding $85,000 by Thursday to unlock them. More folders are changing while people watch. The cloud tax software and the client portal appear to work. The office manager, who is the firm's contact for IT, calls the outside IT provider and lands in the help desk queue; the contract promises a response within four hours. Twenty-two people are at their desks with returns to finish. The managing partner's first instinct is to keep everyone working and wait for the IT provider to call back.",
+      "questions": [
+        "Who has authority to tell all 22 people to stop working in Microsoft 365 right now: the office manager, or only a partner?",
+        "How do you reach the IT provider faster than the help desk queue, and where is that emergency number written down?",
+        "What may staff keep doing in the tax software while the shared library is off limits, and who tells them?"
+      ],
+      "expected_actions": [
+        "Tell every staff member in person to disconnect their laptop from Wi-Fi without switching it off, and to stop opening shared files.",
+        "Call the IT provider's emergency line or account manager directly, say this is ransomware, and ask them to stop file syncing for every account.",
+        "Name an Incident Commander and start a written log with the time of the first report and each decision since."
+      ],
+      "framework_refs": ["SOC 2 CC7.3", "PCI DSS 12.10.1", "NIST 800-171 3.6.1"]
+    },
+    {
+      "index": 2,
+      "offset_minutes": 10,
+      "title": "One laptop has been syncing the damage since Saturday night",
+      "narrative": "9:25 a.m. The IT provider's technician has traced the damage to a laptop that a senior associate took home for the weekend. Its files were locked by encryption on Saturday evening, so they cannot be read without the attackers' key, and the sync app has been copying the damaged versions into the shared libraries ever since: about 41,000 files across 310 client folders. The technician has blocked the associate's account and wants to wipe the laptop remotely right away so the associate can be working again by lunch. Reached by phone, the associate remembers opening an attachment on Friday that looked like a client's scanned documents. That laptop could open every client folder in the shared library, including tax documents with Social Security numbers and bank details.",
+      "questions": [
+        "Do you let the IT provider wipe the laptop now or keep it untouched as evidence, and who at the firm gives that instruction?",
+        "Who confirms that no other laptop is affected before anyone reconnects, and what check counts as proof?",
+        "The associate has returns due this week: is there a spare laptop, and who decides whether a personal computer may be used instead?"
+      ],
+      "expected_actions": [
+        "Tell the IT provider in writing not to wipe the laptop: keep it powered on and off the network, and have it collected from the associate's home today.",
+        "Confirm with the IT provider that the associate's account is signed out everywhere in Microsoft 365 and that sync stays off for every account until laptops are checked.",
+        "Have the IT provider check each remaining laptop for damaged files or the ransom note before it is allowed back online, and report the result laptop by laptop."
+      ],
+      "framework_refs": ["SOC 2 CC7.4", "ISO 27001 A.5.26"]
+    },
+    {
+      "index": 3,
+      "offset_minutes": 22,
+      "title": "A client has seen the ransom note, and the facts about theft conflict",
+      "narrative": "10:30 a.m. A client emails the managing partner a screenshot: the ransom note is sitting in the client's own folder in the client portal. The associate's laptop also ran the portal's desktop app, so 28 clients can see damaged files and the note. The client asks whether tax records have been stolen, and the facts conflict. The note says client files were copied. The IT provider says nothing was taken and points to its security dashboard, yet that same dashboard recorded a threat on the laptop as blocked on Friday afternoon. The engagement letters with the firm's three largest business clients promise notice within 72 hours of discovering unauthorized access to their information; the rest promise only prompt notice.",
+      "questions": [
+        "Do you assume client data was taken until proven otherwise, and who makes that call on conflicting evidence?",
+        "Who replies to this client today, and what do the other 27 portal clients hear, from whom and when?",
+        "When did the 72-hour clock in the three engagement letters start, and who owns meeting it?"
+      ],
+      "expected_actions": [
+        "Ask the portal vendor's support to hide the 28 affected folders now and to report which clients have opened them.",
+        "Report the incident through the cyber insurer's claims line before any client notice goes out, and ask for a lawyer to review the wording.",
+        "Pull the three engagement letters, count the 72 hours from 8:40 a.m. on Monday, and assign a partner to call each of those clients before the deadline."
+      ],
+      "framework_refs": ["SOC 2 CC7.3", "SOC 2 CC7.4", "NIST 800-171 3.6.2"]
+    },
+    {
+      "index": 4,
+      "offset_minutes": 34,
+      "title": "The built-in rollback works, but it erases the weekend",
+      "narrative": "12:15 p.m. The IT provider says Microsoft 365 can roll the current-year client library back to how it stood at 9:00 p.m. on Saturday. That would undo the damage, and it would also erase everything saved since: six people worked on Sunday and about 70 returns were touched. The provider has never run this rollback for the firm and estimates six to ten hours, during which nobody can use the library. The alternative is restoring folders one at a time, which keeps the weekend's work but could take most of the week. Staff are asking whether they may carry on from copies saved on their own laptops or sent to personal email. The filing deadline is nine days away.",
+      "questions": [
+        "Who decides between rolling back the whole library and restoring folder by folder, and what do they need to know first?",
+        "Which clients' returns come first if only part of the library is usable this week, and who sets that order?",
+        "May staff work from copies on their laptops or in personal email in the meantime, and who answers them?"
+      ],
+      "expected_actions": [
+        "Have the six weekend workers list the returns they touched and copy any intact versions to a new folder the IT provider sets up outside the affected library.",
+        "Choose the restore method, record who decided and why, and get the IT provider's time estimate in writing.",
+        "Rank client folders by filing date and prepare extension requests in the tax software for returns that cannot be finished in time."
+      ],
+      "framework_refs": ["SOC 2 CC7.5", "ISO 27001 A.5.26"]
+    },
+    {
+      "index": 5,
+      "offset_minutes": 46,
+      "title": "The backup report said Success every week",
+      "narrative": "2:30 p.m. The rollback cannot help the prior-years archive, which the laptop also synced: seven years of client source documents and workpapers. When the archive was moved into its own Microsoft 365 site 14 months ago, version history was switched off to save storage, on the understanding that the separate backup service the IT provider runs for Microsoft 365 would cover it. The provider now reports that this backup was set up three years ago with a fixed list of mailboxes and sites, and the archive site was never added. The weekly report said Success because it listed only what it had been told to protect. Nobody has ever asked for a test restore. On last year's cyber insurance application, the firm answered Yes to a question about daily backups with tested restores.",
+      "questions": [
+        "Who decides what the firm does about an archive it cannot restore, and does that change its position on the ransom?",
+        "Who tells the insurer that the backup answer on the application was wrong, and does counsel advise before that call?",
+        "Can the IT provider keep leading the technical work now that its own setup is part of the problem, and who decides?"
+      ],
+      "expected_actions": [
+        "Get a written list from the IT provider of exactly which mailboxes and sites the backup covers and the date of the last successful backup of each.",
+        "Tell the insurer about the backup gap today rather than letting it be found later, after asking outside counsel how to correct the answer on the application.",
+        "Check what the tax software and the client portal still hold for prior years, so the firm knows what losing the archive would really mean."
+      ],
+      "framework_refs": ["ISO 27001 A.5.24", "NIST CSF ID.IM-04"]
+    },
+    {
+      "index": 6,
+      "offset_minutes": 58,
+      "title": "The insurer's lawyer steps in, and the partners split on paying",
+      "narrative": "Tuesday, 10:00 a.m. The insurer has assigned a lawyer and a forensic firm (outside investigators), and has warned in writing that coverage may be reduced or refused because of the backup answer on the application. The lawyer's first instructions: every client message needs the lawyer's approval from now on, and nobody at the firm contacts the attackers. The investigators need three to five days with the laptop before they can say whether data was taken. The current-year library is back in use. The archive is not, and the attackers' deadline is Thursday. Two partners want to pay to recover seven years of client records; a third says the firm should never pay. The insurer's negotiator warns that a working unlock tool is not assured even after payment.",
+      "questions": [
+        "Does the managing partner decide alone whether to pay, or do the partners vote, and what happens if they disagree?",
+        "If the firm does not pay, what is the plan for clients who ask for prior-year records the firm no longer has?",
+        "Do you wait three to five days for the investigators before telling all clients, given the 72-hour promise to three of them?"
+      ],
+      "expected_actions": [
+        "Hold a partner vote with the insurer's lawyer on the call, and record the decision, the reasons and who was consulted.",
+        "Before any money moves, have the lawyer confirm in writing that paying is lawful, get the insurer's approval, and have the negotiator obtain proof that the unlock tool works on sample archive files.",
+        "List prior-year clients from the tax software and the portal, mark whose records exist only in the archive, and decide who tells them."
+      ],
+      "framework_refs": ["ISO 27001 A.5.26", "SOC 2 CC7.5"]
+    }
+  ],
+  "wrap_up_questions": [
+    "Which decisions did the firm make quickly and well, and which did it leave to the outside IT provider by default?",
+    "What was missing when you needed it: an emergency number, a tested restore, the insurance policy, the engagement letters with deadlines?",
+    "What will change in the plan, the IT provider's contract and the backup setup, and in what order?",
+    "Which partner or manager takes each change, and by what date will a test restore prove the backup works?"
+  ],
+  "estimated_duration_minutes": 75
+}

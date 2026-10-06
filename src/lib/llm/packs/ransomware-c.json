@@ -1,0 +1,154 @@
+{
+  "title": "Ransomware on the file server and its backup device at a healthcare clinic group",
+  "type": "ransomware",
+  "summary": "On the morning after a long weekend, a five-site clinic group finds its on-prem file server and the backup device beside it encrypted, while the vendor-hosted patient records system keeps running. The exercise tests whether clinics can open safely, how the group recovers when its newest usable backup is five weeks old, and how it meets patient-privacy reporting duties when it cannot yet say what was taken.",
+  "setting": {
+    "company_profile": "A 120-person healthcare clinic group with five locations. Staff sign in through on-prem Active Directory and share files on an on-prem file server. Email is Microsoft 365, backups copy to Azure, and the patient records system is hosted by its vendor.",
+    "day_and_time": "Tuesday after a long weekend, 6:15 a.m., with full clinics opening at 8:00 a.m.",
+    "initial_signal": "The front desk supervisor at the largest clinic cannot open the shared drive to print the day's schedules and intake forms. Each folder now contains one unfamiliar document: a demand for payment. The patient records system still opens normally."
+  },
+  "roles": [
+    {
+      "name": "Incident Commander",
+      "responsibilities": "Runs the response from 6:15 a.m., settles with the medical director whether clinics open, and keeps the list of open decisions."
+    },
+    {
+      "name": "Technical Lead",
+      "responsibilities": "Takes charge of the file server, the backup device and Active Directory, decides what is disconnected, and reports what can be restored and from what date."
+    },
+    {
+      "name": "Communications Lead",
+      "responsibilities": "Tells clinic managers and staff what to do before doors open, and prepares what patients, the patient records vendor and the press are told."
+    },
+    {
+      "name": "Legal and Compliance Lead",
+      "responsibilities": "Acts as privacy officer, leads the assessment of whether patient information was exposed, and tracks every reporting deadline."
+    },
+    {
+      "name": "Executive Sponsor",
+      "responsibilities": "Speaks for the physician owners, approves cancelling or moving patients and outside spending, and leads the response to the ransom demand."
+    },
+    {
+      "name": "Scribe",
+      "responsibilities": "Keeps a handwritten log of times, facts and decisions, because shared files and possibly email cannot be trusted."
+    }
+  ],
+  "objectives": [
+    "Name who has authority at 6:15 a.m. to disconnect the file server and Active Directory, and who decides whether clinics open.",
+    "Confirm clinics can run for several days on downtime procedures that do not depend on anything stored on the file server.",
+    "Establish which backup copy is usable, how old it is, how long a restore takes, and who accepts the loss.",
+    "Name who leads the assessment of whether patient information was exposed and who tracks the 60-day notification deadline.",
+    "Decide who speaks to the patient records vendor, the insurer, the press and law enforcement, and what each is told."
+  ],
+  "injects": [
+    {
+      "index": 1,
+      "offset_minutes": 0,
+      "title": "The shared drive is locked 105 minutes before patients arrive",
+      "narrative": "It is 6:15 a.m. on Tuesday, after a three-day weekend. The front desk supervisor at the largest clinic calls the IT manager at home: nothing on the shared drive will open, and every folder contains a note demanding $400,000. The shared drive holds printable schedules, intake and consent forms, scanned referrals waiting to be filed, billing work lists and payroll files. The blank paper forms that clinics are meant to use when computers are down are stored there too. The patient records system, which its vendor hosts, opens normally in a browser. About 380 patients are booked across five clinics, the first at 8:00 a.m. The IT manager is 40 minutes away, and clinic managers are already texting each other.",
+      "questions": [
+        "Do the five clinics open at 8:00 a.m., and who makes that call: the administrator, the medical director or each clinic manager?",
+        "Who on site can act for IT before the IT manager arrives, and how do they know what to unplug?",
+        "Where do clinics get schedules and blank forms this morning if the shared drive is gone?"
+      ],
+      "expected_actions": [
+        "Start the phone tree to all five clinic managers with one instruction: do not open anything on the shared drive, and join a call at 7:00 a.m.",
+        "Have the IT manager disconnect the file server and the backup device from the network, by remote access or by talking on-site staff through unplugging the network cables, without switching them off.",
+        "Print the day's schedules straight from the patient records system at each clinic, and photocopy intake and consent forms from any paper originals."
+      ],
+      "framework_refs": ["HIPAA 164.308(a)(6)(ii)", "SOC 2 CC7.3", "PCI DSS 12.10.1"]
+    },
+    {
+      "index": 2,
+      "offset_minutes": 12,
+      "title": "An administrator account for the whole Windows network was misused",
+      "narrative": "It is 7:05 a.m. The IT manager, now on site, finds that an administrator account in Active Directory was used overnight to encrypt the files (scramble them into an unreadable form). Active Directory controls sign-in for every office PC and server at all five clinics, so any of them could have been reached, and the attackers may still have access. Staff use the same usernames and passwords for Microsoft 365 email. The cautious step is to reset every password and take the Active Directory servers offline until they are checked, but then nobody can log in to a PC, print or scan at opening time. The patient records system has its own separate logins and can be reached from the exam-room tablets, which are not part of the Windows network, or from staff members' own phones.",
+      "questions": [
+        "Who has authority to lock all 120 staff out of their PCs at opening time, and is that the right call this morning?",
+        "Is Microsoft 365 email safe for running the response, and if not, what do you use instead?",
+        "May staff reach the patient records system from tablets or their own phones today, and who approves that exception?"
+      ],
+      "expected_actions": [
+        "Disable the misused administrator account, change the passwords of every other administrator account from a device known to be clean, and block remote access into the office network at the firewall.",
+        "Force a password reset for all staff, confirm the second sign-in step (MFA) is on for every Microsoft 365 account, and coordinate by phone and group text until that is done.",
+        "Tell clinic managers by phone which devices staff may use for the patient records system today, and write the rule in the log."
+      ],
+      "framework_refs": ["HIPAA 164.308(a)(6)(ii)", "SOC 2 CC7.4", "ISO 27001 A.5.26"]
+    },
+    {
+      "index": 3,
+      "offset_minutes": 25,
+      "title": "The patient records vendor threatens to cut the connections",
+      "narrative": "It is 9:30 a.m. Clinics are seeing patients with paper forms and tablets. The vendor that hosts the patient records system has heard about the incident from its support desk and calls the administrator. Its own system shows no unusual access. Even so, its security team will switch off the group's connections at noon unless the group states in writing that its network is contained: the links that bring lab results into charts, accept scans from clinic scanners and send the nightly billing file. The patient records screens would still work, with lab results typed in by hand. The IT manager cannot yet say how far the attackers got, and no outside investigators have been called. A local reporter has left a voicemail asking why patients are being handed paper forms.",
+      "questions": [
+        "Who speaks to the vendor, and what can the group truthfully put in writing by noon?",
+        "If the connections are cut, who decides how lab results reach clinicians and who checks that none are missed?",
+        "Who hires the outside investigators the vendor will want to hear from, and who returns the reporter's call in the meantime?"
+      ],
+      "expected_actions": [
+        "Name one security contact for the vendor and send a factual written status by noon: what is disconnected, what is not yet known and when the next update comes, without claiming the network is clean.",
+        "Agree a manual process for lab results with the medical director: who calls the lab, who enters results and who double-checks urgent ones.",
+        "Call the cyber insurer's claims line now for its forensic firm and breach lawyer, and route the reporter to the Communications Lead with a short holding statement until the lawyer has reviewed it."
+      ],
+      "framework_refs": ["HIPAA 164.308(a)(6)(ii)", "SOC 2 CC7.4"]
+    },
+    {
+      "index": 4,
+      "offset_minutes": 38,
+      "title": "The backup device is encrypted too, and the Azure copy stopped 37 days ago",
+      "narrative": "It is 11:30 a.m. The backup device that sits beside the file server is encrypted as well: it was on the same network and used the same administrator password. A second copy is supposed to go to Azure storage every night. The IT manager finds that job has failed for 37 days, since a storage access key expired, and the failure alerts went to a shared mailbox nobody reads. The last complete copy in Azure is five weeks old. No one has ever restored from it, and downloading it over the office internet line may take two to three days. Missing would be five weeks of scanned referrals and consent forms not yet filed in patient charts, billing work lists and payroll changes.",
+      "questions": [
+        "Who decides whether a five-week-old copy is good enough to rebuild from, and who must be told about the gap?",
+        "What is restored first: scanned patient documents, billing or payroll, and who sets that order?",
+        "Do you restore onto the existing file server or onto new equipment, given the old one is evidence and may not be safe?"
+      ],
+      "expected_actions": [
+        "Start downloading the Azure copy now to new, clean equipment, since it will take days, and leave the encrypted file server and backup device untouched for investigators.",
+        "Have each clinic manager list paper and fax originals from the last five weeks that can be rescanned, starting with referrals and consent forms.",
+        "Ask the payroll provider and the billing team what they can rebuild from their own systems before this week's payroll."
+      ],
+      "framework_refs": ["SOC 2 CC7.5", "ISO 27001 A.5.24", "NIST CSF ID.IM-04"]
+    },
+    {
+      "index": 5,
+      "offset_minutes": 52,
+      "title": "Was patient information taken? The evidence disagrees",
+      "narrative": "It is 3:00 p.m. The note claims 80 GB of files were copied, including patient documents. The firewall keeps detailed records for only 48 hours, and what remains shows nothing unusual. The internet provider's usage graph, however, shows a large upload from the main clinic late on Sunday night, when no backup to Azure could have been running. The IT manager says that is not proof of theft. The privacy officer replies that under federal health privacy rules, ransomware that reaches patient information is presumed to be a reportable breach unless the group can document a low probability that the information was compromised. No one has a list of which folders on the shared drive held patient information, and the drive itself cannot be read.",
+      "questions": [
+        "Does the group treat this as a breach of patient information from today, and who makes and records that decision?",
+        "Who builds the list of what patient information was on the shared drive, and from what source?",
+        "What evidence can still be saved before it is overwritten, and who asks the internet provider and the firewall vendor for it?"
+      ],
+      "expected_actions": [
+        "Have the privacy officer open a written risk assessment today, recording 6:15 a.m. on Tuesday as the discovery time and the evidence for and against theft.",
+        "Use the five-week-old Azure copy, once downloaded, to list the folders that hold patient information and estimate how many patients are involved.",
+        "Ask the internet provider and the firewall vendor today for any older traffic records they keep, before those are overwritten as well."
+      ],
+      "framework_refs": ["HIPAA 164.308(a)(6)(ii)", "SOC 2 CC7.3", "NIST 800-171 3.6.2"]
+    },
+    {
+      "index": 6,
+      "offset_minutes": 66,
+      "title": "Up to 9,000 patients, a 60-day clock and owners who want to pay",
+      "narrative": "It is Friday, 3:00 p.m. The file server has been rebuilt on new equipment with data from five weeks ago. The forensic firm reports that the attackers opened, and probably copied, folders of scanned documents and billing exports covering between 6,000 and 9,000 patients; it cannot narrow the number. The breach lawyer sets out the deadlines: affected patients must be notified without unreasonable delay and no later than 60 days after Tuesday's discovery, and because more than 500 people are involved, the federal health regulator and local news media must be told in the same period. State law may set a shorter limit. The attackers' deadline is Saturday. Two physician owners want to pay to stop the files being published and to get the missing five weeks back.",
+      "questions": [
+        "Who owns the notification plan: the patient list, the letters, the call line, the regulator filing and the media notice, and by what dates?",
+        "Do you notify the larger number of patients now or wait for a precise count, and who decides?",
+        "Who decides whether the group pays: the physician owners, the administrator or the board, and does paying change any duty to notify?"
+      ],
+      "expected_actions": [
+        "Set a notification calendar counted from Tuesday's discovery, with a named owner for each item, and confirm the state deadline with the breach lawyer.",
+        "Report the incident to the FBI, and have the breach lawyer advise the owners in writing on whether paying is lawful and what it would and would not change about the duty to notify.",
+        "Brief clinic managers and staff on what happened and what to tell patients who ask, before the first letters go out."
+      ],
+      "framework_refs": ["HIPAA 164.308(a)(6)(ii)", "NIST 800-171 3.6.2", "ISO 27001 A.5.26"]
+    }
+  ],
+  "wrap_up_questions": [
+    "What worked in the two hours before clinics opened, and which decisions were made by whoever happened to pick up the phone?",
+    "What did clinics and the response team need that existed only on the shared drive, and where should it be kept instead?",
+    "What must change first: the plan, the backup setup or the clinics' downtime procedures, and what follows?",
+    "Who owns each change, by what date, and when will a restore from the Azure copy be tested?"
+  ],
+  "estimated_duration_minutes": 90
+}

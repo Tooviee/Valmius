@@ -1,0 +1,154 @@
+{
+  "title": "A partner's mailbox sends clients new bank details at an accounting firm",
+  "type": "bec",
+  "summary": "A client calls to confirm it paid a $31,800 invoice to the company's 'new bank account'. No such account exists: for weeks someone has been sending payment instructions from the managing partner's Microsoft 365 mailbox. The exercise tests whether the company can direct its outside IT provider after hours, warn other clients before more money moves, and bring in its cyber insurer without breaking the policy's conditions.",
+  "setting": {
+    "company_profile": "A 25-person accounting and tax firm with no servers of its own. Email and files are in Microsoft 365, managed by an outside IT provider. Client work runs through a client document portal and a practice-management system for billing, and the books are kept in QuickBooks Online.",
+    "day_and_time": "Tuesday, 4:40 p.m., two days before a tax filing deadline, 20 minutes before the IT provider's help desk closes",
+    "initial_signal": "A client's bookkeeper phones the office manager to confirm that last Thursday's $31,800 payment reached 'the new account' named in the managing partner's email. The office manager, who sends every invoice, knows of no new account."
+  },
+  "roles": [
+    {
+      "name": "Incident Commander",
+      "responsibilities": "Leads the response in place of the managing partner, whose own mailbox is the one affected, and sets the order of calls to the client, the IT provider and the insurer."
+    },
+    {
+      "name": "Technical Lead",
+      "responsibilities": "Acts as the single point of contact with the outside IT provider, tells them exactly what to do in Microsoft 365 and gets each step confirmed in writing."
+    },
+    {
+      "name": "Communications Lead",
+      "responsibilities": "Phones the clients who were sent fake bank details, using numbers from the practice-management system, and writes the notice that follows."
+    },
+    {
+      "name": "Legal and Compliance Lead",
+      "responsibilities": "Finds the cyber insurance policy and the engagement letters, reports the claim and tracks what the insurer and each client must be told and by when."
+    },
+    {
+      "name": "Executive Sponsor",
+      "responsibilities": "A partner other than the one affected, who approves emergency spending, decides how to treat the client's lost payment and signs client notices."
+    },
+    {
+      "name": "Scribe",
+      "responsibilities": "Writes down each call, instruction and decision with the time, including what the IT provider changed in Microsoft 365 and when."
+    }
+  ],
+  "objectives": [
+    "Name who leads the response when the managing partner's own mailbox is the one compromised.",
+    "Confirm the IT provider's after-hours contact and emergency terms are written in the plan, along with the Microsoft 365 steps to request first.",
+    "Decide who calls the cyber insurer, at what point, and what must not be promised or paid for before that call.",
+    "Decide who warns clients about fake payment instructions, through which channel, and how quickly.",
+    "Decide who can approve or refuse crediting a client's misdirected payment."
+  ],
+  "injects": [
+    {
+      "index": 1,
+      "offset_minutes": 0,
+      "title": "A client paid an account nobody recognizes",
+      "narrative": "At 4:40 p.m. a client's bookkeeper phones the office manager to confirm that the company received $31,800, paid last Thursday against the year-end invoice. The bookkeeper sent it to a new bank account because the managing partner emailed, on the same thread as the real invoice, to say the company had changed banks. The message came from the managing partner's real address and carries the usual signature. In QuickBooks Online the invoice still shows as unpaid. The managing partner is in the office and denies writing the message, and nothing like it is in the Sent Items folder. The bookkeeper is still on the line asking, 'Did you get our money or not?' The IT provider's help desk shuts at 5 p.m.",
+      "questions": [
+        "Who leads the response when the managing partner's own mailbox is the one in question?",
+        "What do we tell the bookkeeper before the call ends, and who is allowed to say it?",
+        "Who calls the IT provider before 5 p.m., and what exactly do they ask for?"
+      ],
+      "expected_actions": [
+        "The office manager tells the bookkeeper that the company has not changed banks, asks the client to call its own bank's fraud department now to try to pull the payment back, and asks for a copy of the message sent to the office manager's address.",
+        "The Incident Commander takes charge, asks the managing partner to stop using email until the account has been checked and moves the response team's own messages to phone and text.",
+        "The Technical Lead phones the IT provider before 5 p.m., reports a suspected break-in to the managing partner's Microsoft 365 account and asks that the sign-in history and mailbox rules be saved before anything is changed."
+      ],
+      "framework_refs": ["SOC 2 CC7.3", "NIST 800-171 3.6.1"]
+    },
+    {
+      "index": 2,
+      "offset_minutes": 12,
+      "title": "The IT provider resets the password and deletes the evidence",
+      "narrative": "At 4:55 p.m. a technician at the IT provider opens the managing partner's mailbox. The technician finds an inbox rule (an automatic instruction for handling mail) that moved every message mentioning payment, bank or invoice into a folder nobody reads, then resets the password and deletes the rule. No copy of the rule is kept. The folder holds replies from 14 clients to 'new bank details' messages that are no longer in the mailbox. Three of the 14 wrote that they would pay this week. Nobody knows how many other clients got the message and did not reply. The technician adds that the shift is over, after-hours work is billed at an emergency rate and needs a partner's approval, and the account has not been signed out on other devices.",
+      "questions": [
+        "Who can approve emergency after-hours work by the IT provider right now, and up to what cost?",
+        "What do we tell the IT provider to do next in Microsoft 365, in what order, and what must be saved first?",
+        "Who phones the other 13 clients tonight, starting with the three who said they would pay, and what do they say?"
+      ],
+      "expected_actions": [
+        "The Executive Sponsor approves the emergency work by phone and confirms it in writing from a mailbox other than the managing partner's.",
+        "The Technical Lead asks the IT provider to sign the account out everywhere, check for mail forwarding and newly added sign-in methods, export the sign-in log and the audit log (the record of changes to the account), and send a written list of every change made.",
+        "The Communications Lead takes client phone numbers from the practice-management system and calls the three clients who said they would pay, then the other ten, using one agreed script."
+      ],
+      "framework_refs": ["SOC 2 CC7.4", "ISO 27001 A.5.26"]
+    },
+    {
+      "index": 3,
+      "offset_minutes": 24,
+      "title": "Two versions of how long this has been going on",
+      "narrative": "By 5:30 p.m. the IT provider's account of events does not match the evidence. The technician reports that the first unfamiliar sign-in to the managing partner's account was six days ago. But the sign-in log on the company's Microsoft 365 plan goes back only seven days, and the oldest reply in the hidden folder is 19 days old. The technician also says two-step sign-in is switched on for every account. The managing partner has never once been asked for a code. The mailbox holds eight years of client mail, including tax returns, payroll reports and bank statements that clients emailed instead of uploading to the client portal. The managing partner uses the same password for the client portal and the practice-management system.",
+      "questions": [
+        "Which version do we act on, six days or at least 19, and who decides?",
+        "Who gets a written answer tonight on whether two-step sign-in was really enforced on the managing partner's account?",
+        "Who checks the client portal and the practice-management system for sign-ins that were not ours, and who changes those passwords?"
+      ],
+      "expected_actions": [
+        "The Incident Commander sets the working assumption at 19 days or more of full access to the mailbox, and the Scribe records it.",
+        "The Technical Lead asks the IT provider to state in writing which accounts have two-step sign-in enforced and which are exempt.",
+        "The managing partner changes the client portal and practice-management passwords to new, separate ones, and the office manager reviews the access history for that login in both systems."
+      ],
+      "framework_refs": ["SOC 2 CC7.3", "ISO 27001 A.5.24"]
+    },
+    {
+      "index": 4,
+      "offset_minutes": 36,
+      "title": "The insurer's hotline comes with conditions",
+      "narrative": "At 6:15 p.m. the Legal and Compliance Lead finds the cyber insurance policy and calls the claims hotline. The insurer's intake specialist sets out the conditions. The company must use the insurer's approved lawyer and investigation firm, or those costs may not be covered, and a lawyer will call back within two hours. Nobody should admit fault or promise the client its money back without the insurer's consent. Then comes a question: the application said two-step sign-in was enforced on every email account, so was it enforced on this one? The IT provider has just confirmed in writing that the managing partner's account was exempted two years ago, at the managing partner's request. The client's owner is on the other line asking who will cover the $31,800.",
+      "questions": [
+        "Who speaks to the insurer for the company, and how do they answer the question about two-step sign-in?",
+        "Does the IT provider keep working tonight or stop until the insurer's investigation firm takes over, and who decides?",
+        "What do we tell the client's owner about the $31,800 today, and who makes that call?"
+      ],
+      "expected_actions": [
+        "The Legal and Compliance Lead gives the insurer an accurate account, including the exemption, records the claim number and the lawyer's name, and asks for the policy conditions in writing.",
+        "The Technical Lead tells the IT provider to finish securing the account, to delete or reset nothing else and to keep every log for the investigation firm.",
+        "The Executive Sponsor calls the client's owner, says the company is investigating with its insurer, promises an update by a set time tomorrow and makes no commitment about the money."
+      ],
+      "framework_refs": ["ISO 27001 A.5.26", "NIST CSF ID.IM-04"]
+    },
+    {
+      "index": 5,
+      "offset_minutes": 50,
+      "title": "Two notification clocks and a filing deadline",
+      "narrative": "At 8 p.m. the lawyer appointed by the insurer calls with two things that cannot wait. First, engagement letters with three of the largest clients promise notice within 48 hours of discovering unauthorized access to their information, and documents from all three are in the mailbox. Second, a first search of the mailbox finds about 400 tax documents carrying Social Security numbers, for people in several states. State laws require letters to those people, in some states within 30 days, and the full list has to be built from eight years of mail. The staff who could build it are working late every night until Thursday's filing deadline. The managing partner wants to email every client an apology tonight from the affected mailbox.",
+      "questions": [
+        "Who owns the 48-hour notice to the three clients and makes sure it goes out by Thursday at 4:40 p.m.?",
+        "Who builds the list of people whose tax documents were in the mailbox, and what work is dropped to make room for it before Thursday?",
+        "Who approves what is sent to clients, and who tells the managing partner that nothing goes out from the affected mailbox?"
+      ],
+      "expected_actions": [
+        "The Legal and Compliance Lead sets the discovery time at 4:40 p.m. today and puts the 48-hour client deadline and the earliest state deadline on the incident log, each with a named owner.",
+        "The Communications Lead drafts the client notice for the lawyer to review and sends nothing from the managing partner's mailbox; notices go by phone and through the client portal.",
+        "The Executive Sponsor takes one staff member off deadline work to start listing the affected clients and individuals with the investigation firm."
+      ],
+      "framework_refs": ["SOC 2 CC7.4", "NIST 800-171 3.6.2"]
+    },
+    {
+      "index": 6,
+      "offset_minutes": 62,
+      "title": "The client wants its money and the fake emails continue",
+      "narrative": "Three days later the client's bank has recovered $9,400 of the $31,800. The client's owner writes that the invoice was paid in good faith on instructions from the managing partner's own address, considers it settled and wants written agreement by Monday. The insurer has not yet said whether the loss is covered. That morning a different client forwards a new 'updated bank details' message that arrived the day before, two days after the mailbox was locked down. This one comes from an outside address that looks almost like the company's and continues a real invoice thread. Whoever copied the mailbox is still using what they took. Only the 14 clients who replied have been warned, out of about 310.",
+      "questions": [
+        "Who decides whether the client's invoice is treated as paid, and whose consent is needed before answering?",
+        "Do we now warn all 310 clients, through which channel, and who signs the message?",
+        "Who has the authority to end exemptions from two-step sign-in, partners included, and who confirms the IT provider has done it?"
+      ],
+      "expected_actions": [
+        "The Executive Sponsor sends the client's request to the insurer and the lawyer the same day and gives the client a date for the answer.",
+        "The Communications Lead posts a notice in the client portal and adds a line to the invoice template in the practice-management system saying the company's bank details are never changed by email.",
+        "The Technical Lead has the IT provider enforce two-step sign-in on every account with no exemptions, confirm it in writing and supply an after-hours emergency number for the plan."
+      ],
+      "framework_refs": ["SOC 2 CC7.5", "ISO 27001 A.5.27", "NIST CSF ID.IM-02"]
+    }
+  ],
+  "wrap_up_questions": [
+    "Where did the plan give a clear answer, and where did we wait for the IT provider or the insurer to tell us what to do?",
+    "What could we not find quickly: the IT provider's after-hours number, the insurance policy, the engagement letters with notice terms, client phone numbers outside email?",
+    "What changes in the plan, in the IT provider's contract and in how invoices state our bank details?",
+    "Who owns each change and by when, and who checks that the next insurance application matches how accounts are really set up?"
+  ],
+  "estimated_duration_minutes": 80
+}

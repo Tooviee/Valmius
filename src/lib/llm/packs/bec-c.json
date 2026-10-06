@@ -1,0 +1,154 @@
+{
+  "title": "Loan proceeds wired on fake instructions at a regional lender",
+  "type": "bec",
+  "summary": "On a busy closing day, the funding desk wires $412,000 using changed instructions that an email, apparently from the president, told staff to accept without the usual call-back. The title company never receives the money. The exercise tests how fast the company can start a bank recall before the wire desk closes, whether it can contain a login that also opens the on-prem file server, and who makes the 72-hour call on notifying the state financial regulator.",
+  "setting": {
+    "company_profile": "A 120-person regional lender making home and small-business loans, supervised by the state financial regulator. Staff sign in through an on-prem Active Directory that also feeds Microsoft 365. Loan files sit on an on-prem file server, a borrower portal runs in Azure, the loan origination system is hosted by its vendor, and card payments go through an outside processor.",
+    "day_and_time": "Friday, 3:50 p.m., the last closing day of the month, 70 minutes before the bank's wire desk closes",
+    "initial_signal": "A title company's closing agent phones the funding desk: the $412,000 in loan proceeds for a 2 p.m. closing has not arrived. The funding desk's records show the wire left at 11:42 a.m."
+  },
+  "roles": [
+    {
+      "name": "Incident Commander",
+      "responsibilities": "Takes charge when the missing wire is reported and runs two efforts at once: getting the money back before the wire desk closes and finding out whose account was misused."
+    },
+    {
+      "name": "Technical Lead",
+      "responsibilities": "Checks Microsoft 365 sign-ins and the remote access log, and locks down the affected Active Directory login without stopping the closings still in progress."
+    },
+    {
+      "name": "Communications Lead",
+      "responsibilities": "Handles every conversation with the title company and with staff, so that nobody outside hears a guess about fault presented as fact."
+    },
+    {
+      "name": "Legal and Compliance Lead",
+      "responsibilities": "Files the report with the FBI's Internet Crime Complaint Center, works out whether the incident is reportable and owns the 72-hour notice to the state financial regulator."
+    },
+    {
+      "name": "Executive Sponsor",
+      "responsibilities": "Gets the bank's recall letter signed by an authorized signer, and approves or refuses a second wire and any hold on other closings."
+    },
+    {
+      "name": "Scribe",
+      "responsibilities": "Keeps one timeline of who called whom and what was approved, since the bank, the regulator and the board will each ask for it."
+    }
+  ],
+  "objectives": [
+    "Name who is authorized to ask the bank for a wire recall, with a backup, and confirm the bank's fraud line is written in the plan.",
+    "Decide who can hold other outgoing wires and who can approve a second wire while a fraud is under investigation.",
+    "Confirm who can disable an Active Directory account and its Microsoft 365 sessions late on a Friday.",
+    "Name the person who determines that a reportable cybersecurity incident has occurred and who files the 72-hour notice with the state financial regulator.",
+    "Confirm the written wire procedure says a call-back cannot be waived by an email from any executive."
+  ],
+  "injects": [
+    {
+      "index": 1,
+      "offset_minutes": 0,
+      "title": "The title company says the money never arrived",
+      "narrative": "At 3:50 p.m. a title company's closing agent calls the funding desk. The $412,000 in loan proceeds for a 2 p.m. home purchase closing has not arrived. The funding desk's records show the wire left at 11:42 a.m., but to an account at a bank the title company does not use. The instructions were changed this morning after an email, apparently from the company's president, landed in the email thread for this closing. It said the title company had switched banks, attached the new details and told staff to skip the usual call-back (a phone call to a known number to confirm new bank details) because 'I spoke to them myself'. The president is at an offsite board meeting two hours away and says no such email was sent. The bank's wire desk closes at 5 p.m.",
+      "questions": [
+        "Who calls the bank right now, and is that person authorized to ask for a wire recall?",
+        "Who is in charge of this incident while the president is two hours away?",
+        "How much do we tell the closing agent about where the wire went, and who decides that?"
+      ],
+      "expected_actions": [
+        "The treasury manager calls the bank's fraud line on the number written in the plan, reports the 11:42 a.m. wire as fraudulent and asks for an immediate recall.",
+        "The Incident Commander activates the incident response plan and opens a conference call with the treasury manager, the funding desk and the Technical Lead.",
+        "The Communications Lead tells the closing agent the company is treating the wire as fraud, will call back within 30 minutes and will take no further instructions by email."
+      ],
+      "framework_refs": ["NYDFS 500.16", "PCI DSS 12.10.1", "SOC 2 CC7.3"]
+    },
+    {
+      "index": 2,
+      "offset_minutes": 10,
+      "title": "The bank can try a recall, on conditions",
+      "narrative": "At 4:05 p.m. the bank's fraud desk explains what it can do. It will send a recall (a request to the receiving bank to return the money) today, but only with a letter signed by an authorized signer on the account. It also tells the company to file a report with the FBI's Internet Crime Complaint Center (IC3) straight away and pass on the confirmation number, since that report lets the FBI ask the receiving bank to freeze the funds. The chance of recovery falls sharply after the first day. The authorized signers are the president, two hours away, and the chief financial officer, who is on leave. The bank then asks whether to hold the nine other closing wires queued for this afternoon, $3.1 million in total.",
+      "questions": [
+        "Who gets the recall letter signed in the next 55 minutes, and how does it reach the bank?",
+        "Who files the IC3 report, and do they have the wire details needed to complete it?",
+        "Do we hold the nine other wires, knowing some closings may fail today, and who decides?"
+      ],
+      "expected_actions": [
+        "The Executive Sponsor phones the president and the chief financial officer, gets the recall letter signed electronically by whichever answers first and sends it to the bank before 5 p.m.",
+        "The Legal and Compliance Lead files the report at ic3.gov using the amount, time and receiving bank from the wire confirmation, and gives the confirmation number to the bank's fraud desk.",
+        "The treasury manager holds each queued wire until the funding desk has confirmed its instructions by calling a phone number already on file for the recipient."
+      ],
+      "framework_refs": ["NYDFS 500.16", "SOC 2 CC7.4"]
+    },
+    {
+      "index": 3,
+      "offset_minutes": 22,
+      "title": "The title company wants a second wire today",
+      "narrative": "At 4:20 p.m. the title company's owner calls. Buyers and sellers are sitting in the closing room and the purchase contract expires tonight. The owner says the fake instructions came from the company's side, 'so your email was hacked, not ours', and demands a second $412,000 to the correct account before 5 p.m. The company's systems administrator says the opposite: the message was sent from outside and only imitated the president's address, so 'our systems are clean'. Yet the fake message quoted the loan number, the borrower's name and the exact amount. Each side has part of the story and neither has evidence. A second wire would put $824,000 out for one loan, with no certainty that any of the first comes back.",
+      "questions": [
+        "Do we send a second $412,000 today, and who has the authority to approve it?",
+        "If we send it, who verifies the correct instructions, and how?",
+        "Who answers the claim that our email was hacked, and what do they say while the facts are unknown?"
+      ],
+      "expected_actions": [
+        "The Executive Sponsor decides on the second wire with the president and the treasury manager on the line, and the Scribe records who approved it and why.",
+        "The funding desk confirms the title company's bank details by calling the phone number in a closing file from before this month, with a second employee listening, before any wire is released.",
+        "The Communications Lead tells the title company's owner that the company has not yet established whose email was misused, will share its findings in writing and is not accepting or assigning fault today."
+      ],
+      "framework_refs": ["NYDFS 500.16", "ISO 27001 A.5.26"]
+    },
+    {
+      "index": 4,
+      "offset_minutes": 36,
+      "title": "One login opens many doors",
+      "narrative": "At 4:45 p.m. the Technical Lead checks the closing coordinator's Microsoft 365 account, since the coordinator ran this closing. The account was opened from an unfamiliar location on six days in the past two weeks. It is an Active Directory login, so the same username and password open email, remote access (VPN), the loan folders on the file server, the staff side of the borrower portal in Azure and the loan origination system hosted by its vendor. The remote access log shows the account connecting at 2 a.m. last Sunday, when the coordinator was asleep. The file server keeps no record of who opened which file, and the loan folders hold documents for about 2,300 borrowers. The coordinator is handling the nine closings still in progress.",
+      "questions": [
+        "Who can disable the closing coordinator's Active Directory account and end its Microsoft 365 sessions right now, and who takes over the nine closings?",
+        "Do we switch off remote access for everyone tonight or only for this account, and who decides?",
+        "With no record on the file server, who finds out which borrower files this login could reach, and who asks the loan origination system vendor for its sign-in records?"
+      ],
+      "expected_actions": [
+        "The Technical Lead saves the Microsoft 365 sign-in log and the remote access log, then resets the account's Active Directory password, ends its Microsoft 365 sessions and blocks its remote access.",
+        "The Technical Lead phones the loan origination system vendor's support line and asks in writing for 30 days of sign-in and file-view history for this login.",
+        "The Incident Commander has the nine closings moved to a second coordinator and each set of wire instructions confirmed again by phone."
+      ],
+      "framework_refs": ["NYDFS 500.16", "SOC 2 CC7.4", "ISO 27001 A.5.24"]
+    },
+    {
+      "index": 5,
+      "offset_minutes": 50,
+      "title": "A fraud loss or a reportable incident?",
+      "narrative": "At 6:30 p.m. the president arrives and the group takes stock. The bank and the loan origination system vendor both say their answers will come on Monday. The Legal and Compliance Lead raises the state financial regulator, which expects notice within 72 hours of the company determining that a reportable cybersecurity incident has occurred. The head of lending argues there is nothing to determine: the money was lost to a fraudulent email, and nobody has shown that borrower data was taken. But the coordinator's account did connect remotely at 2 a.m. on Sunday, and that login opens the loan folders. If the clock started when the account misuse was confirmed at 4:45 p.m., it runs out on Monday at 4:45 p.m., only hours after those answers arrive. The company's fraud insurance also requires prompt notice of a loss.",
+      "questions": [
+        "Has the company determined that a reportable cybersecurity incident occurred, as of what time, and whose decision is that?",
+        "Do we file over the weekend with what we know, or wait for Monday's answers with only hours to spare, and who decides?",
+        "Who notifies the insurer, and who briefs the board chair tonight?"
+      ],
+      "expected_actions": [
+        "The Legal and Compliance Lead records the determination and its time, calculates the deadline from it, and drafts the regulator notice tonight with outside counsel from the facts known so far.",
+        "The Executive Sponsor approves the notice, and the Legal and Compliance Lead submits it through the regulator's online portal before the deadline and saves the confirmation.",
+        "The treasury manager phones the insurer's claims line to report the $412,000 loss and asks for the claim number in writing."
+      ],
+      "framework_refs": ["NYDFS 500.16", "NIST 800-171 3.6.2"]
+    },
+    {
+      "index": 6,
+      "offset_minutes": 64,
+      "title": "Monday: part of the money is back",
+      "narrative": "Monday, 9 a.m. The bank reports that the receiving bank froze $151,000. The other $261,000 left that account within an hour of arriving on Friday. The loan origination system vendor's records show the closing coordinator's login opened 38 loan files from other teams, late at night, over the past two weeks. Those files hold borrowers' tax returns and bank statements. The board chair wants a written timeline by noon, and the 72 hours for the regulator run out this afternoon. The funding desk has 14 closings scheduled today and wants to work normally again. The call-back that was skipped on Friday is in the written wire procedure, but the procedure says nothing about what staff should do when an executive tells them to skip it.",
+      "questions": [
+        "Under what conditions does the funding desk release today's 14 wires, and who has the authority to set them?",
+        "Who tells the 38 borrowers, and how does the vendor's finding change what goes to the regulator this afternoon?",
+        "How do we change the wire procedure so that no email from any executive can replace a call-back, and who owns that change?"
+      ],
+      "expected_actions": [
+        "The treasury manager releases today's wires only after a call-back to a number on file for each recipient, and the president tells all staff in writing that no executive will ever ask them to skip that step.",
+        "The Legal and Compliance Lead adds the 38 files to the regulator notice, starts borrower notification with outside counsel and sends the board chair the Scribe's timeline by noon.",
+        "The Technical Lead turns on file access logging on the file server and sets a date for requiring a second sign-in step on remote access."
+      ],
+      "framework_refs": ["NYDFS 500.16", "SOC 2 CC7.5", "PCI DSS 12.10.6"]
+    }
+  ],
+  "wrap_up_questions": [
+    "Which steps moved fast because the plan named a person and a phone number, and which waited while someone worked it out?",
+    "What did we not have on hand: a reachable authorized signer, the bank's fraud line, a record of file access on the server, a clear test for when the regulator must be told?",
+    "What changes in the plan and the wire procedure so that an email, even one from the president, can never replace a call-back?",
+    "Who owns each change, by what date, and who reports progress to the board?"
+  ],
+  "estimated_duration_minutes": 90
+}

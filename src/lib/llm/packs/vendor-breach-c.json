@@ -1,0 +1,154 @@
+{
+  "title": "Billing vendor breach and outage at a healthcare clinic group",
+  "type": "vendor_breach",
+  "summary": "The vendor-hosted billing system at a six-clinic healthcare group goes down on a Monday morning, and hours later the vendor admits a breach it found five weeks ago but cannot say whose records were involved. The exercise tests front-desk downtime procedures, who can cut the vendor's access to the network, and how the company meets federal and state patient-notification deadlines without the vendor's list.",
+  "setting": {
+    "company_profile": "A healthcare group of about 120 people running six clinics. It has an on-premises file server and Active Directory, Microsoft 365, a finance reporting database in Azure, and a billing system hosted by an outside billing vendor.",
+    "day_and_time": "Monday, 7:35 a.m., as six clinics open in the last week of the month, when claims must go out",
+    "initial_signal": "Front desks at all six clinics report that the billing system will not load, so staff cannot check insurance coverage or post payments. The billing vendor's status page says 'unscheduled maintenance' with no end time."
+  },
+  "roles": [
+    {
+      "name": "Incident Commander",
+      "responsibilities": "Declares the incident when the billing system goes down, keeps the six clinics running on downtime procedures, and decides when to escalate to the physician owners."
+    },
+    {
+      "name": "Technical Lead",
+      "responsibilities": "Switches off and later restores the billing vendor's account in Active Directory and its link to the file server, and preserves the company's own logs."
+    },
+    {
+      "name": "Communications Lead",
+      "responsibilities": "Gives the front desks a script for patients, handles the reporter, and makes sure staff at all six clinics say the same thing."
+    },
+    {
+      "name": "Legal and Compliance Lead",
+      "responsibilities": "As privacy officer, records the discovery date, tracks the 60-day and 30-day notification deadlines, and works with outside counsel on the business associate agreement."
+    },
+    {
+      "name": "Executive Sponsor",
+      "responsibilities": "Decides whether to accept the vendor's offer to send the notices, approves the cost of investigators and patient letters, and answers to the physician owners for keeping or replacing the vendor."
+    },
+    {
+      "name": "Scribe",
+      "responsibilities": "Records each instruction sent to the clinics and each statement from the vendor with its time, since the vendor's account keeps changing and the deadlines count from the discovery date."
+    }
+  ],
+  "objectives": [
+    "Confirm that every front desk has a working downtime procedure for a billing system outage, and decide who treats an unexplained vendor outage as a possible incident.",
+    "Name one owner for the 60-day patient-notification deadline and the 30-day state deadline, and agree what date they count from.",
+    "Decide who can switch off the billing vendor's access to Active Directory and the file server, and what must be true before it is switched back on.",
+    "Decide whether the company builds its own list of affected patients or waits for the vendor, and who does the work.",
+    "Decide what front-desk staff tell patients and who alone speaks to the press."
+  ],
+  "injects": [
+    {
+      "index": 1,
+      "offset_minutes": 0,
+      "title": "The billing system is down at every clinic",
+      "narrative": "At 7:35 a.m. the front desks at all six clinics report that the billing system will not load. Staff cannot check insurance coverage, look up balances or post payments, and patients are already at the counters. The billing vendor hosts the system. Its status page says 'unscheduled maintenance' with no end time, and its support line has a 50-minute wait. The IT manager confirms that the company's own network, Microsoft 365 and the electronic health record are working normally. The practice administrator remembers a short, unexplained outage at the same vendor two weeks ago. Nobody at the vendor has used the word 'security', and nobody at the company has decided whether this is a nuisance or an incident.",
+      "questions": [
+        "Who decides whether a vendor outage with no explanation is handled as a possible security incident or as an ordinary IT fault, and on what evidence?",
+        "Who tells six front desks what to do with patients whose insurance cannot be checked, and is there a written downtime procedure?",
+        "Who has a contact at the vendor above the support line, and where is that number kept?"
+      ],
+      "expected_actions": [
+        "The IT manager opens an incident record, phones the practice administrator and the privacy officer, and notes the time of the first report.",
+        "Send the front desks the paper downtime forms by Microsoft Teams: see every patient, record insurance details by hand, and collect payments later.",
+        "The practice administrator calls the vendor's account executive directly and asks whether the outage involves a security problem."
+      ],
+      "framework_refs": ["HIPAA 164.308(a)(6)(ii)", "SOC 2 CC7.3", "NIST CSF ID.IM-04"]
+    },
+    {
+      "index": 2,
+      "offset_minutes": 12,
+      "title": "The vendor admits a breach it found five weeks ago",
+      "narrative": "At 10:05 a.m. an email from the vendor's privacy office reaches the practice administrator; the vendor's contact list does not include the company's privacy officer. The vendor shut its systems down overnight after confirming an intruder had been inside its network. It 'first identified suspicious activity' five weeks ago and 'determined on Friday' that client data was involved, possibly including patient names, dates of birth, insurance member numbers and billing codes for 'some clients'. Systems will return 'in phases over three to five days'. A list of affected patients will follow 'when our review is complete'. The business associate agreement, the contract required with any vendor that handles patient data, obliges the vendor to report a breach within 10 days of discovering it. The vendor holds billing records for about 86,000 of the company's patients.",
+      "questions": [
+        "Which date does the company record as the day it discovered the breach, and who asks counsel whether the vendor's five-week delay counts against the company?",
+        "Who leads from here: the IT manager, the privacy officer or the practice administrator?",
+        "Who calls outside counsel and the cyber insurer today, and where are the policy and the business associate agreement kept?"
+      ],
+      "expected_actions": [
+        "The privacy officer records today's date and time as the discovery date in the incident log and saves the vendor's email in full.",
+        "Pull the signed business associate agreement from the contracts folder on the file server and mark its reporting, cooperation and cost clauses.",
+        "Call outside healthcare counsel before noon, and report the incident to the cyber insurer's claims line the same day."
+      ],
+      "framework_refs": ["HIPAA 164.308(a)(6)(ii)", "PCI DSS 12.10.1"]
+    },
+    {
+      "index": 3,
+      "offset_minutes": 25,
+      "title": "The vendor's standing access to the network",
+      "narrative": "By 11:00 a.m. the IT manager has raised a second worry. The vendor is not only a website: it has a service account (a login used by a system, not a person) in Active Directory and an always-on private link into the network, which it uses to place payment files on the file server every night. About 70 staff also have billing system passwords, and many are believed to match their Windows passwords. The logs the IT manager can check show nothing unusual, but they go back only 14 days and the intruder was inside the vendor for at least five weeks. Switching off the account and the link takes ten minutes. Switching them back on later needs the vendor's network team, which is not answering. Forcing 70 password changes mid-morning will slow every clinic.",
+      "questions": [
+        "Who can authorize switching off the vendor's account and network link right now, and does that person need anyone else's agreement?",
+        "Do the 70 staff change their Windows passwords this morning or after the clinics close, and who makes that call?",
+        "With only 14 days of logs, who decides whether to pay outside investigators to examine the company's own network?"
+      ],
+      "expected_actions": [
+        "The IT manager disables the vendor's service account in Active Directory, closes the vendor's link on the firewall, and notes the time in the incident log.",
+        "Require a password change at next sign-in for every staff member with a billing system login, and confirm their Microsoft 365 accounts use two-step sign-in.",
+        "Copy the current Active Directory, firewall and file server logs to a separate location so the 14 days on hand are not overwritten."
+      ],
+      "framework_refs": ["HIPAA 164.308(a)(6)(ii)", "SOC 2 CC7.4", "ISO 27001 A.5.26"]
+    },
+    {
+      "index": 4,
+      "offset_minutes": 38,
+      "title": "The vendor's account does not add up",
+      "narrative": "On Tuesday at 2:00 p.m. the vendor holds a call for all its clients. Its review is continuing. The data involved 'may include' names, dates of birth, insurance member numbers and billing codes, but 'no clinical information'. Monday's email said 'some clients'; on the call the vendor says it is 'treating all clients as potentially affected'. Lists of affected patients will take three to four weeks. The billing manager objects that clinic staff routinely attach referral letters and visit notes to claims, so clinical information does sit in that system. The billing system is still down, so the company cannot run its own reports there. The finance reporting database in Azure, however, holds a copy of billing records up to last Friday, though not the attachments.",
+      "questions": [
+        "Does the company plan for the worst case, all 86,000 patients, or wait three to four weeks for the vendor's list, and who decides?",
+        "Who builds the company's own patient list from the Azure reporting database, and who checks addresses against the electronic health record?",
+        "Who puts the company's questions to the vendor in writing, and what deadline does the letter set?"
+      ],
+      "expected_actions": [
+        "The billing manager and IT manager export patient names, addresses and last visit dates from the Azure reporting database into a restricted folder, as the working list of people who may need a letter.",
+        "Outside counsel sends the vendor a written demand under the business associate agreement for the affected-patient list, the types of data and the dates, with a 10-day deadline.",
+        "Ask the vendor in writing whether claim attachments were stored in the affected systems, because the 'no clinical information' statement decides what the patient letters must say."
+      ],
+      "framework_refs": ["HIPAA 164.308(a)(6)(ii)", "SOC 2 CC7.3", "NIST 800-171 3.6.2"]
+    },
+    {
+      "index": 5,
+      "offset_minutes": 52,
+      "title": "Day nine: a reporter, patients and two legal clocks",
+      "narrative": "It is Wednesday of the following week. The vendor has posted a public notice, a nearby hospital using the same vendor has written to its patients, and a local television reporter has phoned the main clinic asking whether the company is affected. Front desks are taking about 40 patient calls a day and answering them differently. Outside counsel sets out the dates. Letters must go to affected patients within 60 days of the Monday the company learned of the breach. Because more than 500 people are involved, the federal health regulator and local news outlets must be told on the same timetable. One of the two states where patients live sets a shorter limit: its residents and its attorney general must be told within 30 days, now 21 days away. The vendor still has no list.",
+      "questions": [
+        "Who is the one person who speaks to the reporter, and what is the statement?",
+        "What do front-desk staff say from today to a patient who asks whether their information was taken, and who writes that script?",
+        "Does the company commit to a mailing date now, without the vendor's list, to meet the 30-day state deadline, and who owns that date?"
+      ],
+      "expected_actions": [
+        "The communications lead sends a short written statement and a front-desk script by email and Microsoft Teams, and directs all press calls to one named person.",
+        "The privacy officer puts each deadline in a shared Microsoft 365 calendar with an owner: the state attorney general, the patient letters, the federal regulator and the media notice.",
+        "Set a mailing date at least a week inside the 30-day deadline and get a quote today for printing and posting 86,000 letters and staffing a patient phone line."
+      ],
+      "framework_refs": ["HIPAA 164.308(a)(6)(ii)", "SOC 2 CC7.4", "NIST 800-171 3.6.2"]
+    },
+    {
+      "index": 6,
+      "offset_minutes": 66,
+      "title": "The vendor offers to send the letters, with strings attached",
+      "narrative": "Sixteen days in, the billing system has only just come back and the billing team faces more than two weeks of unsent claims; payroll was met only by drawing on a credit line. The vendor now offers to mail patient letters, staff a call center and file the regulator's report for every client at its own cost. To accept, the company must sign a form by Friday that also releases the vendor from further claims, and the vendor's draft letter does not mention the clinical notes attached to claims. The vendor also asks the IT manager to switch its account and network link back on today so payment files can flow, offering a one-page statement that its systems are 'now secure'. Two physician owners want a new vendor; the billing manager says a move takes six months.",
+      "questions": [
+        "Does the company let the vendor send the letters or send its own, knowing it stays responsible to patients either way, and who decides after hearing counsel?",
+        "What must the vendor show before its account and network link are switched back on, and who signs off?",
+        "Who owns the decision to stay with or leave this vendor, and by what date will it be made?"
+      ],
+      "expected_actions": [
+        "Send the vendor's form to outside counsel and the cyber insurer before anyone signs, and tell the vendor in writing that the release is not accepted as drafted.",
+        "Switch the vendor's link back on only with a new service account password, access limited to the one payment-file folder on the file server, and a written summary of the vendor's investigation.",
+        "Add the vendor's security contacts, the downtime forms and the notification calendar to the response plan, each with a named owner."
+      ],
+      "framework_refs": ["SOC 2 CC7.5", "ISO 27001 A.5.27", "NIST CSF ID.IM-02"]
+    }
+  ],
+  "wrap_up_questions": [
+    "Which parts of the response worked as the plan describes, and which decision took the group longest to make?",
+    "Which gap would cost the most in a real event: the front-desk downtime procedure, the vendor contacts, the 14 days of logs, or having no patient list the company controls?",
+    "What should change in the response plan, and what should the next contract with any vendor that holds patient data require?",
+    "Who is responsible for each change, when is it due, and who reports progress to the physician owners?"
+  ],
+  "estimated_duration_minutes": 90
+}
