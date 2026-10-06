@@ -22,6 +22,7 @@ import {
 } from "@/lib/schemas/scenario";
 import { generateScenarioAction } from "@/server/actions/generate-scenario";
 import type { GenerateState, GeneratorFormValues } from "@/server/actions/types";
+import { EmailGate } from "./email-gate";
 
 const EMPTY_VALUES: GeneratorFormValues = {
   industry: "",
@@ -204,7 +205,12 @@ export function ScenarioGenerator() {
             </AlertDescription>
           </Alert>
         )}
-        {!pending && state.status === "ok" && <ScenarioView scenario={state.scenario} />}
+        {!pending && state.status === "ok" && (
+          <div className="space-y-10">
+            <ScenarioView scenario={state.scenario} />
+            <EmailGate scenario={state.scenario} values={state.values} />
+          </div>
+        )}
       </div>
     </div>
   );
