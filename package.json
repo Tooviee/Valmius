@@ -18,6 +18,7 @@
     "test:db": "vitest run --config vitest.db.config.mts",
     "test:e2e": "playwright test",
     "db:migrate": "dotenv -e .env.local -- supabase db push",
+    "db:types": "dotenv -e .env.local -- supabase gen types typescript --linked > src/lib/supabase/database.types.ts",
     "db:seed": "tsx --env-file=.env.local scripts/seed.ts"
   },
   "dependencies": {
@@ -48,6 +49,7 @@
     "eslint-config-next": "16.3.8",
     "eslint-config-prettier": "^10.1.8",
     "prettier": "^3.9.9",
+    "supabase": "^2.119.0",
     "tailwindcss": "^4",
     "tsx": "^4.23.15",
     "typescript": "^5",
