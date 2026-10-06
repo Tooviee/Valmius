@@ -1,0 +1,117 @@
+{
+  "title": "Ransomware on the shared drive at a small company",
+  "type": "ransomware",
+  "summary": "A small company finds its shared drive encrypted with a ransom note, then learns its newest backup is almost three weeks old. The exercise tests who takes charge, how files are recovered, and who decides on the ransom and on telling customers.",
+  "setting": {
+    "company_profile": "A 30-person company that keeps shared files on one file server and uses Microsoft 365 for email.",
+    "day_and_time": "Tuesday, 8:15 a.m., the day payroll is due",
+    "initial_signal": "Staff cannot open files on the shared drive, and every folder holds a note demanding payment."
+  },
+  "roles": [
+    {
+      "name": "Incident Commander",
+      "responsibilities": "Runs the response, assigns tasks and keeps the list of open decisions."
+    },
+    {
+      "name": "Technical Lead",
+      "responsibilities": "Disconnects the file server, checks the backups and reports what can be restored."
+    },
+    {
+      "name": "Communications Lead",
+      "responsibilities": "Tells staff what to do and drafts any message to customers."
+    },
+    {
+      "name": "Executive Sponsor",
+      "responsibilities": "Approves spending and gives the final answer on the ransom demand."
+    }
+  ],
+  "objectives": [
+    "Name who can take the file server offline during business hours.",
+    "Confirm how old the newest usable backup is and who accepts the loss.",
+    "Decide who signs off on any ransom payment and who is consulted first."
+  ],
+  "injects": [
+    {
+      "index": 1,
+      "offset_minutes": 0,
+      "title": "Files will not open and a note demands payment",
+      "narrative": "It is 8:15 a.m. on Tuesday. Staff report that nothing on the shared drive will open, and a text file in each folder demands $60,000 within three days. Email in Microsoft 365 still works. The payroll files due today are on the shared drive. The IT lead asks whether to unplug the file server.",
+      "questions": [
+        "Who declares an incident and takes charge?",
+        "Who has authority to take the file server offline during business hours?"
+      ],
+      "expected_actions": [
+        "Name an Incident Commander and tell staff to stop using the shared drive.",
+        "Disconnect the file server from the network without switching it off."
+      ],
+      "framework_refs": ["SOC 2 CC7.3"]
+    },
+    {
+      "index": 2,
+      "offset_minutes": 10,
+      "title": "The newest good backup is 19 days old",
+      "narrative": "The backup software has reported a successful job every night, but the IT lead finds the backup disk filled up and the last complete copy is 19 days old. No one has ever tested a restore. Restoring would lose almost three weeks of work, including this month's invoices.",
+      "questions": [
+        "Who decides whether losing three weeks of files is acceptable?",
+        "What is restored first, and who sets that order?"
+      ],
+      "expected_actions": [
+        "Restore the 19-day-old copy to a separate, clean machine and check that the files open.",
+        "Ask each team to list what they created in the last three weeks and where other copies might exist."
+      ],
+      "framework_refs": ["SOC 2 CC7.5"]
+    },
+    {
+      "index": 3,
+      "offset_minutes": 20,
+      "title": "The note says files were copied",
+      "narrative": "The note claims customer files were copied before they were locked. The firewall log covers only the last two days and shows nothing unusual, so the IT lead cannot say whether anything left the network. The shared drive held customer contracts and contact lists.",
+      "questions": [
+        "Do you treat customer data as taken until proven otherwise, and who decides?",
+        "Who can find out what really left the network?"
+      ],
+      "expected_actions": [
+        "Write down the decision to treat the data as possibly copied, and when it was made.",
+        "Call the cyber insurer's claims line and ask for its forensic investigators."
+      ],
+      "framework_refs": ["ISO 27001 A.5.26"]
+    },
+    {
+      "index": 4,
+      "offset_minutes": 30,
+      "title": "A customer asks what happened",
+      "narrative": "A large customer emails after an invoice arrives late and asks whether there has been a security incident. The contract gives the company 72 hours from discovery to notify them of any incident affecting their data. The insurer's lawyer has not yet called back.",
+      "questions": [
+        "When did the 72-hour clock start, and who owns meeting it?",
+        "Who replies to the customer today, and what do they say?"
+      ],
+      "expected_actions": [
+        "List the customers whose contracts carry a notice deadline, with the contact for each.",
+        "Reply to the customer today with the facts so far, after the Executive Sponsor approves the wording."
+      ],
+      "framework_refs": ["NIST 800-171 3.6.2"]
+    },
+    {
+      "index": 5,
+      "offset_minutes": 40,
+      "title": "Pay or rebuild from the old backup",
+      "narrative": "It is Thursday. The restore from the old backup works. The attackers' deadline is tomorrow, and the owner wants to pay to get the missing three weeks back and to keep the files from being published. The insurer says it must approve any payment in advance.",
+      "questions": [
+        "Who signs off on paying, and who is consulted before that?",
+        "If you do not pay, what do you tell customers whose files may be published?"
+      ],
+      "expected_actions": [
+        "Get written advice from the insurer and its lawyer on whether a payment would be legal and covered.",
+        "Record the decision, who made it and the reasons in the incident log."
+      ],
+      "framework_refs": ["SOC 2 CC7.4"]
+    }
+  ],
+  "wrap_up_questions": [
+    "What worked well in the group's response?",
+    "What was missing from the plan when you needed it?",
+    "What will you change in the plan and the backup setup?",
+    "Who owns each change, and by what date?"
+  ],
+  "estimated_duration_minutes": 60
+}

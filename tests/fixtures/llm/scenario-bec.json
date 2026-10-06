@@ -1,0 +1,117 @@
+{
+  "title": "Fake CEO wire request and a compromised mailbox at a small company",
+  "type": "bec",
+  "summary": "An email that looks like it is from the CEO asks the finance manager for an urgent wire. The team then finds that the finance manager's mailbox has been quietly copying mail to an outsider. The exercise tests who can stop a payment, who can lock an account and who has to be told.",
+  "setting": {
+    "company_profile": "A 30-person company that uses Microsoft 365 for email and files and QuickBooks Online for accounting, with one IT generalist and a two-person finance team.",
+    "day_and_time": "Wednesday, 2:15 p.m., while the CEO is presenting at a trade show",
+    "initial_signal": "The finance manager receives an email that appears to be from the CEO, asking for an $18,400 wire to a new supplier before the end of the day."
+  },
+  "roles": [
+    {
+      "name": "Incident Commander",
+      "responsibilities": "Leads the response, decides whether the request is an incident and assigns who calls the bank and who checks the mailbox."
+    },
+    {
+      "name": "Technical Lead",
+      "responsibilities": "Checks and locks down the finance manager's Microsoft 365 account, saving the evidence first."
+    },
+    {
+      "name": "Communications Lead",
+      "responsibilities": "Warns staff and customers about fake payment requests and keeps the CEO informed."
+    },
+    {
+      "name": "Scribe",
+      "responsibilities": "Logs each finding and decision with the time and the name of the person who decided."
+    }
+  ],
+  "objectives": [
+    "Name who can stop or recall a payment and who calls the bank.",
+    "Confirm who can lock a Microsoft 365 account and remove a mail rule.",
+    "Decide who notifies the insurer and customers, and by when."
+  ],
+  "injects": [
+    {
+      "index": 1,
+      "offset_minutes": 0,
+      "title": "An urgent wire request from the CEO",
+      "narrative": "At 2:15 p.m. the finance manager gets an email that appears to be from the CEO, asking for an $18,400 wire to a new supplier by 5 p.m. The CEO is on stage at a trade show and not answering the phone. The sender's name is right, but the address is not the company's.",
+      "questions": [
+        "Who decides whether the wire goes out, and how is the request verified?",
+        "Is this a security incident, and who declares it?"
+      ],
+      "expected_actions": [
+        "The finance manager holds the payment and calls the CEO's assistant on a known phone number.",
+        "The Incident Commander starts a log and asks the Technical Lead to examine the message."
+      ],
+      "framework_refs": ["SOC 2 CC7.3"]
+    },
+    {
+      "index": 2,
+      "offset_minutes": 10,
+      "title": "An earlier wire already went out",
+      "narrative": "A look at the bank portal shows this was not the first request. A similar email on Monday led to a $9,600 wire that left the same day. The bank says it can ask the receiving bank to return that money, but only if an authorized signer on the account requests it today.",
+      "questions": [
+        "Who is authorized to ask the bank for a recall, and who is the backup?",
+        "Who reports the fraud to law enforcement?"
+      ],
+      "expected_actions": [
+        "An authorized signer calls the bank's fraud line and asks for a recall of Monday's wire.",
+        "The Incident Commander files a report with the FBI's Internet Crime Complaint Center and saves the confirmation number."
+      ],
+      "framework_refs": ["SOC 2 CC7.4"]
+    },
+    {
+      "index": 3,
+      "offset_minutes": 20,
+      "title": "A hidden rule in the finance manager's mailbox",
+      "narrative": "The Technical Lead finds an inbox rule the finance manager never created. For three weeks it has copied every message about invoices or payments to an outside address. The Microsoft 365 sign-in log shows sign-ins from a country where the company has no staff.",
+      "questions": [
+        "Who has authority to lock the finance manager's account during the working day?",
+        "What must be saved before the rule is deleted, and who saves it?"
+      ],
+      "expected_actions": [
+        "The Technical Lead takes a screenshot of the rule, resets the password and signs the account out everywhere in the Microsoft 365 admin center.",
+        "The finance manager changes the bank portal and QuickBooks Online passwords from another computer."
+      ],
+      "framework_refs": ["ISO 27001 A.5.26"]
+    },
+    {
+      "index": 4,
+      "offset_minutes": 30,
+      "title": "The insurer and a customer both call",
+      "narrative": "The cyber insurer's claims line says the policy requires written notice within 72 hours and covers only its approved investigators. Meanwhile a customer forwards an invoice that came from the finance manager's address yesterday with different bank details. The finance manager did not send it.",
+      "questions": [
+        "Who notifies the insurer in writing, and when do the 72 hours end?",
+        "Who warns customers about fake invoices, and through which channel?"
+      ],
+      "expected_actions": [
+        "The Incident Commander sends written notice to the insurer and records the claim number.",
+        "The Communications Lead phones customers with open invoices to confirm the company's bank details have not changed."
+      ],
+      "framework_refs": ["NIST 800-171 3.6.2"]
+    },
+    {
+      "index": 5,
+      "offset_minutes": 40,
+      "title": "Back to normal, with changes",
+      "narrative": "Two days later the mailbox is clean and the bank has recovered part of the money. Finance wants to pay suppliers again. The written payment procedure still allows a wire on the strength of a single email.",
+      "questions": [
+        "What has to change before payments resume, and who approves the change?",
+        "Who updates the incident response plan, and by what date?"
+      ],
+      "expected_actions": [
+        "The finance manager adds a phone call-back to a known number for every new payee or changed bank detail.",
+        "The Incident Commander records the lessons learned and gives each one an owner and a date."
+      ],
+      "framework_refs": ["PCI DSS 12.10.6"]
+    }
+  ],
+  "wrap_up_questions": [
+    "Which decisions had a clear owner, and which did not?",
+    "What information or contact detail was missing when we needed it?",
+    "What will we change in the plan and in the payment process?",
+    "Who owns each change, and by what date?"
+  ],
+  "estimated_duration_minutes": 60
+}

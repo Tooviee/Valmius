@@ -1,0 +1,116 @@
+{
+  "title": "CRM vendor breach at a small company",
+  "type": "vendor_breach",
+  "summary": "The vendor that hosts a small company's customer relationship system announces a breach, and customer contact details may have been exposed. Two customer contracts require notice within 72 hours. The exercise tests who takes charge, who reads the contracts, and who tells customers.",
+  "setting": {
+    "company_profile": "A company of about 30 people that runs on SaaS tools: Google Workspace, Slack and a hosted CRM (the system that holds customer contacts and sales notes).",
+    "day_and_time": "Wednesday, 3:15 p.m., in the last week of the quarter",
+    "initial_signal": "The sales manager forwards an email from the CRM vendor saying an unauthorized party accessed its systems and that some customers' records may have been viewed."
+  },
+  "roles": [
+    {
+      "name": "Incident Commander",
+      "responsibilities": "Takes charge when the vendor's email arrives and gives every decision a named owner."
+    },
+    {
+      "name": "Technical Lead",
+      "responsibilities": "Checks what the CRM holds and resets its connections to Google Workspace and Slack."
+    },
+    {
+      "name": "Communications Lead",
+      "responsibilities": "Writes the customer notices and is the only person who answers customer questions about the incident."
+    },
+    {
+      "name": "Legal and Compliance Lead",
+      "responsibilities": "Reads the customer contracts and tracks the 72-hour notice deadline."
+    }
+  ],
+  "objectives": [
+    "Decide who takes charge when a vendor reports a breach.",
+    "Fix when the 72-hour contract clock started and who approves customer notices.",
+    "Name one owner for all customer communication about the incident."
+  ],
+  "injects": [
+    {
+      "index": 1,
+      "offset_minutes": 0,
+      "title": "The vendor's email arrives",
+      "narrative": "At 3:15 p.m. the sales manager forwards an email from the CRM vendor's security team. An unauthorized party accessed the vendor's systems last week, and records belonging to some customers may have been viewed. The vendor will confirm which accounts were affected within five days. The CRM holds every customer contact the company has.",
+      "questions": [
+        "Is this an incident under the plan, and who decides?",
+        "Who takes charge when the problem is at a vendor?"
+      ],
+      "expected_actions": [
+        "Open an incident record, name an incident commander, and note the time the vendor's email arrived.",
+        "Ask the vendor's security contact in writing whether the company's account was affected and on which dates."
+      ],
+      "framework_refs": ["SOC 2 CC7.3"]
+    },
+    {
+      "index": 2,
+      "offset_minutes": 10,
+      "title": "What the CRM holds and connects to",
+      "narrative": "The IT lead checks the CRM. It holds about 4,000 contacts with names, work emails, phone numbers and sales notes. It is connected to Google Workspace for sign-in and email, and to Slack for deal alerts. The vendor has not said whether those connections were exposed. Resetting them will interrupt the sales team for half a day in the last week of the quarter.",
+      "questions": [
+        "Who can authorize resetting the CRM's connections during the last week of the quarter?",
+        "Who owns the list of what data the CRM holds?"
+      ],
+      "expected_actions": [
+        "Disconnect and reauthorize the CRM's connections to Google Workspace and Slack.",
+        "Review the Google Workspace admin log for unusual sign-ins by CRM users."
+      ],
+      "framework_refs": ["SOC 2 CC7.4"]
+    },
+    {
+      "index": 3,
+      "offset_minutes": 20,
+      "title": "The 72-hour clause",
+      "narrative": "The operations lead finds that contracts with the two largest customers require notice within 72 hours of the company becoming aware of a security incident involving their data. The vendor's email arrived 90 minutes ago, but the vendor will not confirm for five days whether the company's account was affected.",
+      "questions": [
+        "Did the 72-hour clock start when the vendor's email arrived, and who decides?",
+        "Who approves the wording of a customer notice?"
+      ],
+      "expected_actions": [
+        "Record the due time for each customer, counted from the vendor's email, in a shared Google Sheet.",
+        "Draft a notice saying what is known, what is not, and when the next update will come."
+      ],
+      "framework_refs": ["NIST 800-171 3.6.2"]
+    },
+    {
+      "index": 4,
+      "offset_minutes": 30,
+      "title": "A customer asks before the company has told them",
+      "narrative": "The next morning one of the two large customers emails the CEO. They have read about the vendor's breach in the news and ask whether their data was involved. A salesperson has already told them informally that everything is fine. The vendor's status page now says most accounts were affected, which contradicts its first email.",
+      "questions": [
+        "Who is the single contact for this customer, and who corrects the informal reply?",
+        "Does the company act on the vendor's first email or on its status page, and who decides?"
+      ],
+      "expected_actions": [
+        "Send both large customers the written notice today and log the time it was sent.",
+        "Tell all staff in Slack that only the communications lead answers questions about the incident."
+      ],
+      "framework_refs": ["ISO 27001 A.5.26"]
+    },
+    {
+      "index": 5,
+      "offset_minutes": 40,
+      "title": "The vendor confirms the records were copied",
+      "narrative": "Five days later the vendor confirms that the company's contact records were copied. The two contract notices went out on time. The remaining customers have not been told, the CRM still holds contacts that are years old, and nobody is sure the vendor's security emails reach the right person.",
+      "questions": [
+        "Who decides whether the remaining customers are told, and by when?",
+        "Who owns the vendor's security contact details from now on?"
+      ],
+      "expected_actions": [
+        "Email a notice to the remaining customers whose contacts were in the CRM.",
+        "Delete contacts the company no longer needs and add the vendor's security contact to the response plan."
+      ],
+      "framework_refs": ["ISO 27001 A.5.27"]
+    }
+  ],
+  "wrap_up_questions": [
+    "Which decisions already had an owner in the plan, and which did the group have to invent?",
+    "What was missing when it was needed: the contract clauses, the vendor's security contact, or a list of what the CRM holds?",
+    "What changes in the plan, who owns each change, and by what date?"
+  ],
+  "estimated_duration_minutes": 60
+}
