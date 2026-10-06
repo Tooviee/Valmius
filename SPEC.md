@@ -1,0 +1,281 @@
+# SPEC.md: IR Plan + Tabletop Exercise Generator (product name: Drill Day; slug `drillday`)
+
+Version 0.1, October 2026. This is the product spec Claude Code builds from. Build one phase at a time. Do not start a phase until the previous phase's verification steps pass.
+
+## 1. What this is
+
+A web app for companies with 10 to 200 employees and no security team. It (1) generates a tailored written incident response (IR) plan from a short questionnaire, (2) runs facilitated tabletop exercises (a "fire drill" for the plan) with a timer, scripted injects and a timestamped decision log, and (3) produces a dated after-action report PDF that satisfies auditors (SOC 2, PCI DSS, ISO 27001, HIPAA), cyber insurers and regulators who ask "do you have an IR plan and did you test it this year?"
+
+Why it can win: the cheapest purpose-built competitor charges $4,800 a year for two exercises. Compliance platforms (Vanta, Drata) hand customers a template and an evidence-upload slot but do not run or track exercises. Consultants charge $5,000 to $50,000 per facilitated exercise. Nobody sells a self-serve tool at $50 to $300 a month.
+
+## 2. Users
+
+- **Owner / Facilitator**: the person stuck with compliance at a small company (CTO, IT manager, ops lead). Creates the org, answers the questionnaire, runs exercises. Has an account.
+- **Participant**: team members who join an exercise by link. No account. Confirm attendance, follow along, sign off at the end.
+- **Consultant / MSP** (Phase 5, not now): manages many client orgs, white-labels reports.
+- **Anonymous visitor** (Phase 1): uses the free public scenario generator; may leave an email.
+
+## 3. MVP goals and non-goals
+
+Goals: ship Phases 1 to 4 so one real company can generate a plan, run an exercise with 3 to 6 people, and download an after-action PDF an auditor would accept.
+
+Non-goals for MVP (do not build): billing, email sending, Vanta/Drata API push, multi-org consultant accounts, white-label, SSO/SAML, live multi-user realtime editing, mobile apps, storing any health data (PHI) or payment card numbers (PAN), automated detection or integration with security tools.
+
+## 4. Tech stack
+
+Chosen because the founder has shipped a Next.js + Supabase app before.
+
+- Next.js (latest stable, App Router), TypeScript strict mode, Tailwind CSS, shadcn/ui components
+- Supabase: Postgres, Auth (magic link + Google), Storage (PDFs). Client via `@supabase/ssr`. Migrations in `supabase/migrations/`. Row Level Security on every table from day one.
+- LLM: Anthropic TypeScript SDK (`@anthropic-ai/sdk`), model `claude-sonnet-5-5` for plan and scenario generation. All LLM calls happen server-side (server actions or route handlers). Every LLM response is parsed as JSON and validated with zod; on validation failure retry once, then fall back to a seeded scenario pack. Construct the client with no explicit key (`new Anthropic()`), so credentials resolve from the environment (`ANTHROPIC_API_KEY` today); switching to Workload Identity Federation later is then a config change, not a code change (see section 14).
+- LLM access goes through one module, `src/lib/llm/`, which exports typed functions (`generateScenario`, `generatePlan`, `generateReport`) and picks its implementation from `LLM_PROVIDER`: `anthropic` (real API) or `mock` (returns fixtures from `tests/fixtures/llm/`). Vitest and Playwright always run with `LLM_PROVIDER=mock`. Only the manual check in each phase's Verify step uses the real API.
+- PDF: `@react-pdf/renderer` (runs on Vercel serverless). DOCX export via the `docx` npm package.
+- Validation: zod everywhere (forms, LLM output, route inputs).
+- Tests: Vitest for unit tests, Playwright for a smoke test per phase.
+- Tooling: pnpm, ESLint, Prettier. Deploy target: Vercel. Env in `.env.local`, documented in `.env.example`.
+
+## 5. Architecture rules
+
+- No secrets in client code. The Supabase secret key (`sb_secret_...`, env `SUPABASE_SECRET_KEY`) and the Anthropic key are server-only. The browser gets only `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` (`sb_publishable_...`). Do not use the legacy `anon` / `service_role` JWT keys.
+- The Supabase project was created with "Automatically expose new tables" OFF (the default since May 30, 2026). Every migration that creates a table must therefore include explicit `grant` statements for the roles that may reach it through the Data API, enable RLS, and add policies. Pattern: `grant select on public.t to anon, authenticated` only when the browser needs the table; `grant all on public.t to service_role` always; RLS enabled on every table; functions get `revoke execute ... from public, anon, authenticated` unless the browser must call them. See `supabase/migrations/20261006000001_phase1_schema.sql` for the reference pattern.
+- The public generator (Phase 1) writes only to `leads` and `events`. Rate limit it per IP (5 generations per hour) using a Postgres counter table or Upstash Redis; add Cloudflare Turnstile if abuse appears.
+- Cap LLM input sizes (free text fields max 1,000 chars) and set `max_tokens` on every call. Log token usage per call to `events` (in mock mode log `model: "mock"` and zero tokens so the pipeline is exercised).
+- Tests never spend money: no test may call the real Anthropic API. The mock provider must return fixtures that pass the same zod schemas the real provider is validated against, so a schema change breaks the fixtures and the tests together.
+- Pre-generate and store 3 variants of each of the 4 scenario packs so the free generator can serve a seeded scenario with light personalization instead of a full LLM call when traffic spikes or the API fails.
+- Every row has `created_at`, `created_by` where applicable. Soft-delete not needed for MVP; hard delete with cascade.
+- Dates in UTC in the DB; render in the user's timezone.
+
+## 6. Data model (Postgres, Supabase)
+
+RLS rule for all org-scoped tables: a user can read/write a row only if `exists (select 1 from org_members where org_id = row.org_id and user_id = auth.uid())`. Participant access to exercises goes through a signed token on the exercise participant row, checked server-side with the service role, never via RLS bypass in the client.
+
+```
+organizations        id, name, industry, headcount_band, frameworks text[], timezone, created_by, created_at
+org_members          org_id, user_id, role ('owner'|'member'), created_at
+questionnaires       id, org_id, answers jsonb, completed_at, created_at
+ir_plans             id, org_id, questionnaire_id, version int, sections jsonb, status ('draft'|'approved'),
+                     approved_by_name, approved_at, created_at
+scenarios            id, org_id (null = public pack), type ('ransomware'|'bec'|'cloud_credential'|'vendor_breach'|'custom'),
+                     title, content jsonb (see schema in 8.3), framework_tags text[], is_pack bool, created_at
+exercises            id, org_id, scenario_id, ir_plan_id, title, scheduled_at, started_at, ended_at,
+                     status ('scheduled'|'live'|'ended'|'reported'), facilitator_id, created_at
+exercise_participants id, exercise_id, name, email, role, token (unique, random 32 bytes), attended_at,
+                     signed_off_at, signature_name
+decision_log         id, exercise_id, inject_index int, logged_at, actor_name, decision text, notes text
+findings             id, exercise_id, kind ('strength'|'gap'|'action_item'), description, severity ('low'|'medium'|'high'),
+                     owner_name, due_date, created_at
+reports              id, exercise_id, version int, content jsonb, pdf_path, sha256, generated_at
+leads                id, email, industry, headcount_band, scenario_type, source, created_at
+events               id, name, properties jsonb, ip_hash, org_id (nullable), created_at
+rate_limits          key (ip_hash + window), count, window_start
+```
+
+## 7. Phases, acceptance criteria, verification
+
+### Phase 1: Public scenario generator + landing page (lead magnet and demand test)
+
+Build:
+- `/` landing page: one-sentence pitch, who it is for, the four compliance drivers (PCI DSS 12.10.2, SOC 2 CC7.4, insurer questionnaires, NYDFS 500.16), CTA to the generator, email capture for "notify me when the full product launches". Copy follows section 9.1: name the exact control IDs we evidence, use the positioning line, never claim "makes you compliant".
+- `/generate`: form with industry (select), headcount band (select), hosting (multi-select: AWS, GCP, Azure, Vercel/Netlify, on-prem, SaaS only), scenario type (4 options), optional context (text, max 500 chars). Submit calls a server action that builds the prompt, calls the model, validates against the scenario zod schema, and renders the scenario: title, summary, roles, objectives, injects as a vertical timeline with discussion questions, wrap-up questions, estimated duration.
+- "Download the full scenario + after-action template (PDF)" button gated by an email form. On submit: insert `leads`, log `events`, then render the PDF (scenario + blank after-action template) and trigger download. No email sending.
+- Rate limiting as in section 5, using the `bump_rate_limit(p_key, p_limit, p_window_seconds)` RPC. Seeded fallback scenario per type if the LLM call fails or validation fails twice.
+- Database: the Phase 1 migration already exists at `supabase/migrations/20261006000001_phase1_schema.sql` (scenarios, leads, events, rate_limits, RPCs, grants, RLS). Apply it with `supabase db push`; add new migrations rather than editing it. Write `pnpm db:seed` to insert the 4 scenario packs with the secret key.
+- `events` logged: `generator_viewed`, `scenario_generated` (with type, token usage, fallback bool), `email_submitted`, `pdf_downloaded`.
+- A tiny `/admin/leads` page protected by a single `ADMIN_PASSWORD` env var (basic auth) showing leads and event counts by day. Replaced by real auth in Phase 2.
+
+Verify (all automated tests run with `LLM_PROVIDER=mock`; the Playwright config sets it):
+- `pnpm typecheck`, `pnpm lint`, `pnpm test` pass. Unit tests cover: scenario zod schema accepts the 4 seeded packs and rejects a scenario missing injects; prompt builder includes all form fields; the mock provider's fixtures pass the schema; the real provider's JSON parsing and retry-then-fallback path, tested with a stubbed SDK response (never a live call); rate limiter blocks the 6th request in an hour.
+- Playwright smoke: open `/generate`, fill the form, submit, see at least 4 injects rendered (from the fixture), submit an email, PDF download starts.
+- `pnpm build` succeeds.
+- Manual check, the only step that uses the real API: run the dev server with `LLM_PROVIDER=anthropic`, generate one scenario per type and read them; each must be specific to the chosen industry and hosting. Confirm the `events` rows show real token counts.
+- Before the generator is deployed publicly, Claude Code reminds the founder to work through the launch checklist in section 14.
+
+### Phase 2: Accounts, organizations, IR plan generator
+
+Build:
+- Supabase Auth (magic link + Google). On first login, create org (name, industry, headcount, frameworks, timezone).
+- Questionnaire: the 15 questions in section 8.1, multi-step, autosaved to `questionnaires.answers`.
+- "Generate plan": server action produces `ir_plans.sections` (section 8.2 outline) as JSON, each section with `title`, `markdown`, `framework_refs`. Show the plan with a per-section markdown editor and "regenerate this section". Save creates a new version.
+- Approve plan: records `approved_by_name` and `approved_at`, status `approved`.
+- Export plan as PDF and DOCX, including a version/approval footer on each page.
+
+Verify: unit tests for plan schema and notification-matrix builder (section 8.2 item 7); Playwright: sign in with a test user, complete questionnaire with fixture answers, generate plan, see 11 sections, export PDF. RLS test: a second test user cannot read the first user's org rows (test with two Supabase clients).
+
+### Phase 3: Exercise runner (facilitator console)
+
+Build:
+- Create exercise: choose a scenario pack or "generate custom from my plan" (passes plan context to the model), set title and date, add participants (name, email, role). Each participant gets a token link `/x/[token]`.
+- Facilitator console `/app/exercises/[id]/run`: left column scenario and current inject; center: discussion questions and a decision-log form (actor dropdown from participants plus "Team", decision text, notes); right: elapsed timer, inject list with "Reveal next inject", quick-add buttons for Strength / Gap / Action item, parking lot notes. Every log entry gets a server timestamp.
+- Participant view `/x/[token]`: confirm attendance (sets `attended_at`), shows role and the currently revealed inject and questions (poll every 5 seconds; Supabase Realtime is optional, not required), and after the exercise ends shows a sign-off form (typed name as signature, sets `signed_off_at`).
+- End exercise: status `ended`, log locked (no inserts after `ended_at`, enforced in a DB trigger).
+
+Verify: unit tests for timer math and log locking trigger (insert after end must fail); Playwright: facilitator starts exercise, reveals 3 injects, logs 3 decisions, adds a gap, ends; participant confirms attendance and signs off in a second browser context.
+
+### Phase 4: After-action report + evidence vault
+
+Build:
+- "Generate report": server action sends scenario, decision log, findings and attendance to the model, asks for structured JSON (section 8.4 outline), facilitator edits, then "Finalize" renders the PDF, stores it in Supabase Storage, computes SHA-256 of the PDF and saves `reports` row. Exercise status `reported`.
+- Evidence vault `/app/evidence`: table of exercises (date, scenario, participants, status, PDF link, hash), the approved plan version, and "next test due" per framework (12 months after the last ended exercise). Export CSV.
+- Plan page shows "last tested on" and links to the report.
+
+Verify: unit tests for report schema and hash; Playwright: finalize a report, download PDF, hash in the UI matches `sha256sum` of the downloaded file; vault shows next-due date.
+
+### Phase 5 (later, not in MVP)
+
+Stripe annual plans ($600 to $1,200 per org, consultant tier), Resend email reminders at 11 months and 30 days before audit date, Vanta and Drata evidence push, consultant multi-org and white-label, SSO.
+
+## 8. Content specifications
+
+### 8.1 Questionnaire (15 questions)
+
+1. Company name, industry, headcount band (1-10, 11-50, 51-200, 201+), timezone.
+2. Compliance obligations (multi): SOC 2, PCI DSS, HIPAA, ISO 27001, CMMC / NIST 800-171, NYDFS 500, cyber insurance only, none yet. Next audit or renewal date (optional).
+3. Sensitive data handled (multi): customer PII, payment card data, health data, source code / IP, employee data, financial records.
+4. Where systems run (multi): AWS, GCP, Azure, Vercel/Netlify, on-prem servers, SaaS only.
+5. Identity provider and MFA status: Google Workspace, Microsoft 365, Okta, other; MFA enforced yes/no/partial.
+6. Key business systems (free text, max 1,000 chars): e.g., GitHub, Slack, Salesforce, QuickBooks, Stripe.
+7. Roles: who leads IT/security, who is the executive decision maker, who handles legal, who handles customer communications. Role titles required, names optional. Backup for each (optional).
+8. Outside parties: MSP/MSSP, outside counsel, cyber insurer (name and policy claims phone, optional), forensics retainer (yes/no).
+9. Monitoring in place (multi): EDR/antivirus, SIEM or log aggregation, cloud provider alerts, none.
+10. Backups: where, how often, last successful restore test (date or "never").
+11. Customer contractual notification obligations (free text, e.g., "notify within 72 hours").
+12. Regulatory notification obligations known (multi): state breach laws, GDPR, HIPAA (60 days), PCI card brands, NYDFS (72 hours), SEC, none known.
+13. Out-of-band communication channel if email/Slack is compromised (phone tree, Signal group, personal emails, none).
+14. Incidents in the last 24 months (yes/no, type, optional).
+15. Review cadence preference (annual, semi-annual, quarterly) and who approves the plan.
+
+### 8.2 IR plan outline (11 sections)
+
+1. Purpose, scope, authority, plan owner, version history.
+2. Roles and responsibilities: Incident Commander, Technical Lead, Communications Lead, Legal/Compliance Lead, Executive Sponsor, Scribe. Filled from Q7 with backups.
+3. Incident definitions and severity levels (SEV1 to SEV3) with concrete examples for this company's stack.
+4. Detection and reporting: how employees report, intake channel, triage steps, who decides severity.
+5. Response lifecycle aligned to NIST SP 800-61 Rev. 3 / CSF 2.0: Preparation, Detection and Analysis, Containment, Eradication and Recovery, Post-incident activity. Written for this company's systems (Q4 to Q6, Q9, Q10).
+6. Communication plan: internal, customers, regulators, law enforcement, insurer, media; out-of-band channel from Q13; holding-statement templates.
+7. Notification matrix: a table generated from Q2, Q3, Q11, Q12 listing each obligation, trigger, deadline and owner.
+8. Evidence handling and documentation: decision log, chain of custody basics, what not to do (do not wipe, do not pay without counsel and insurer).
+9. Scenario playbooks: short runbooks for ransomware, business email compromise, cloud credential compromise, vendor breach.
+10. Testing and maintenance: annual tabletop at minimum (more often if Q15 says so), review triggers (major system change, incident, audit finding), approval procedure.
+11. Appendices: contact list, system inventory, control mapping (section 9).
+
+### 8.3 Scenario JSON schema (zod)
+
+```
+{
+  title: string,
+  type: 'ransomware'|'bec'|'cloud_credential'|'vendor_breach'|'custom',
+  summary: string,
+  setting: { company_profile: string, day_and_time: string, initial_signal: string },
+  roles: [{ name: string, responsibilities: string }],           // 3 to 6
+  objectives: string[],                                           // 3 to 5
+  injects: [{                                                     // 5 to 7
+    index: number, offset_minutes: number, title: string, narrative: string,
+    questions: string[],                                          // 2 to 4
+    expected_actions: string[],                                   // 2 to 4
+    framework_refs: string[]                                      // e.g. ["PCI 12.10.2", "SOC2 CC7.4"]
+  }],
+  wrap_up_questions: string[],                                    // 3 to 5
+  estimated_duration_minutes: number                              // 45 to 120
+}
+```
+
+Scenario packs to seed (3 variants each): **Ransomware** (file server or SaaS backup encrypted, ransom note, backups questionable); **Business email compromise** (CEO-impersonation wire request to finance, then real mailbox compromise discovered); **Cloud credential compromise** (API key leaked in a public repo, unexpected cloud bill, data exfiltration question); **Vendor breach** (critical SaaS vendor announces breach, customer data possibly exposed, contractual notification clock starts).
+
+### 8.4 After-action report outline
+
+Cover (org, exercise title, date, duration, facilitator, plan version tested); participants with roles, attendance and sign-off status; scenario summary and injects used; decision timeline (timestamp, inject, actor, decision); strengths observed; gaps with severity; action items with owner and due date; control mapping showing which requirements this exercise evidences (section 9); attestation block with report SHA-256 and generation timestamp.
+
+## 9. Compliance mapping (tag content with these)
+
+| Framework | Reference | What it asks for |
+|---|---|---|
+| SOC 2 (TSC 2017) | CC7.3, CC7.4, CC7.5 | Evaluate security events, respond via a defined IR program, recover; auditors expect at least annual tabletop evidence |
+| PCI DSS v4.0.1 | 12.10.1 to 12.10.7 | IR plan exists; reviewed and tested at least every 12 months (12.10.2); 24/7 personnel; training; lessons learned |
+| NIST SP 800-61 Rev. 3 (Apr 2025) | whole document | Lifecycle phases, CSF 2.0 alignment |
+| ISO/IEC 27001:2022 | A.5.24 to A.5.28 | IR planning and preparation, assessment, response, learning, evidence collection |
+| HIPAA Security Rule | 45 CFR 164.308(a)(6) | Security incident procedures, response and reporting (2025 NPRM would add mandatory written plan and testing; not final) |
+| NYDFS 23 NYCRR 500 | 500.16 | IR and BCDR plans, tested at least annually |
+| CMMC 2.0 L2 / NIST 800-171 | 3.6.1 to 3.6.3 | IR capability, tracking and reporting, testing of IR capability |
+
+### 9.1 What we actually cover (positioning, and the source for landing-page copy)
+
+Drill Day covers a small, mandatory slice of each framework: roughly 2 to 9% of controls depending on how a framework counts. That is the intended size for a one-pain-point product. Never claim more on the landing page or in sales conversations; auditors and consultants will know.
+
+| Framework | Total controls (how counted) | Covered directly | Supported | Share |
+|---|---|---|---|---|
+| SOC 2 Security | 33 common criteria (5 to 8 IR controls in a typical 80 to 100 control program) | CC7.3, CC7.4, CC7.5 | CC2.2, CC2.3 (communication), CC9.1 (risk mitigation) | ~9% of criteria |
+| PCI DSS v4.0.1 | ~260 requirements | 12.10.1, 12.10.2, 12.10.6 | 12.10.3 (personnel designated), 12.10.4 (training evidence) | ~1 to 2% |
+| ISO/IEC 27001:2022 | 93 Annex A controls | A.5.24, A.5.26, A.5.27 | A.5.25, A.5.28 | ~5% |
+| NIST CSF 2.0 | 106 subcategories | ID.IM-02 (improvements from exercises), ID.IM-04 (IR plan maintained) | 15 to 20 subcategories in Respond (RS) and Recover (RC) get their plan and evidence from us | ~2 to 4% direct |
+| HIPAA Security Rule | 18 standards, ~42 implementation specs | 164.308(a)(6)(ii) response and reporting | 164.308(a)(7)(ii)(D) contingency plan testing | ~2 to 5% |
+| CMMC 2.0 L2 / NIST 800-171 | 110 practices | 3.6.1, 3.6.2, 3.6.3 | none | ~3% |
+| NYDFS 23 NYCRR 500 | ~23 sections | 500.16 | 500.17 (notification process) | ~4 to 8% |
+
+Why the slice is worth paying for even though it is small:
+
+1. **Audits are pass/fail per control.** A company with every other control done and no tested IR plan fails SOC 2 or PCI just the same. "Percent covered" is the wrong lens; "does this close a mandatory, dated control" is the right one.
+2. **Nobody else automates it.** Compliance platforms (Vanta, Drata) automate most evidence collection but, by their own documentation, leave IR exercises as a manual upload. Cloud providers cannot inherit it: AWS's own CMMC Level 2 guidance classifies 21 of 110 practices (19%) as fully inheritable from AWS, all physical security, media protection and maintenance; incident response planning and testing stay on the customer side of the shared responsibility model for every cloud provider. The "AWS covers 50%" line people repeat is a rule of thumb about borrowable paperwork, not an AWS number.
+3. **The price matches the share.** Companies spend $7,500 to $25,000 a year on a compliance platform. Five percent of that is $375 to $1,250, which is where the $600 to $1,200 annual price sits.
+
+Positioning line for the landing page and sales conversations: "Your cloud provider inherits the data center. Your compliance platform automates the configuration evidence. Your team still has to practice the response. We cover that last part."
+
+Landing-page rule: name the exact control IDs we evidence (the "Covered directly" column) and nothing broader. Do not say "SOC 2 compliant" or "makes you compliant"; say "produces the evidence auditors ask for under CC7.3 to CC7.5" and the equivalents.
+
+Sources: [AWS Prescriptive Guidance, CMMC Level 2 on AWS](https://docs.aws.amazon.com/prescriptive-guidance/latest/cmmc-level-2-compliance-on-aws/aws-cloud-considerations.html); [Vanta help center, incident response plan](https://help.vanta.com/en/articles/11345507-how-to-approach-your-incident-response-plan-in-vanta); [Drata help, IR plan guidance](https://help.drata.com/en/articles/7885026-incident-response-plan-guidance).
+
+## 10. LLM prompting approach
+
+- One system prompt per generator (scenario, plan, report) stored in `src/lib/llm/prompts/*.ts`, with the JSON schema described in the prompt and enforced by zod after the call.
+- Style rules in every prompt: write for a non-security reader, name the company's actual systems from the questionnaire, no generic filler, every inject must force a decision, every plan section must be actionable in the first hour of an incident.
+- Temperature low (0.3) for plans and reports, moderate (0.7) for scenarios.
+- Record `model`, `input_tokens`, `output_tokens`, `latency_ms`, `fallback_used` in `events` for every call.
+
+## 11. Security and privacy requirements
+
+- RLS on every table; a test proves cross-org reads fail.
+- Participant tokens are 32 random bytes, base64url, single exercise, expire 30 days after `ended_at`.
+- Do not collect PHI or PAN anywhere; the questionnaire asks whether the company handles them, never for the data itself. State this in the privacy page.
+- Rate limit and size-limit every public endpoint. Validate every input with zod. Escape all markdown rendering (use a sanitizing renderer).
+- Org owner can delete the org; cascade deletes everything including Storage PDFs.
+- Security headers (CSP, HSTS, X-Frame-Options) via `next.config` headers.
+
+## 12. Engineering conventions
+
+- Folder layout: `src/app` (routes), `src/components`, `src/lib/{supabase,llm,pdf,schemas,rate-limit}`, `src/server/actions`, `supabase/migrations`, `tests/unit`, `tests/e2e`.
+- Server actions for mutations; route handlers only for downloads and webhooks.
+- Scripts: `pnpm dev`, `pnpm typecheck`, `pnpm lint`, `pnpm test`, `pnpm test:e2e`, `pnpm build`, `pnpm db:migrate`, `pnpm db:seed`.
+- Testing: `pnpm test` and `pnpm test:e2e` force `LLM_PROVIDER=mock` (set it in the Vitest and Playwright configs, not just in `.env`). Fixtures live in `tests/fixtures/llm/` (one scenario per type, one plan, one report). Any test that needs the real provider's behavior stubs the SDK response; a live API call inside a test is a bug.
+- Conventional commits; commit at the end of each numbered build item in a phase; never commit `.env.local`.
+- Keep `CLAUDE.md` short: commands, conventions, gotchas. Keep this `SPEC.md` as the source of truth; update it when a decision changes.
+
+## 13. Open questions for the founder (answer before Phase 2)
+
+1. Product name: decided, **Drill Day** (display name with the space; `drillday` as the package, repo and code slug; "Drill Day" in UI copy and PDF headers). Domain: being registered; use `NEXT_PUBLIC_SITE_URL` everywhere a URL is needed rather than hardcoding one.
+2. Google sign-in at launch, or magic link only?
+3. Pricing page in Phase 1 (price anchors shown) or hide pricing until validation data is in?
+4. Will you run the first real exercise with a friendly company? If yes, which industry, so the first scenario pack variants target it.
+5. Hosting region for Supabase (US East default).
+
+## 14. Launch and ops checklist (founder tasks, not code)
+
+Claude Code: when Phase 1 verification passes, and again before any production deploy, print this list and ask the founder which items are done. Do not perform these; they are Console and dashboard actions the founder takes.
+
+Standing reminders (repeat whenever the trigger comes up in conversation, not only at phase boundaries):
+- **Spend cap and alerts move together.** Whenever the founder mentions raising the Anthropic workspace spend limit, or a phase transition calls for it, remind them that the two email notifications are fixed dollar amounts and do not scale: set them to 50% and 80% of the new cap (for example, a $100 cap means notifications at $50 and $80). Ask for the new cap and compute the two numbers for them.
+- **Auto-reload goes on at public launch.** Whenever the founder mentions deploying, launching, sharing the generator link, or going public, remind them to turn on auto-reload (first item below) if it is still off.
+
+Before the free generator goes public:
+- [ ] **Turn on Anthropic auto-reload.** Console > Settings > Billing > Auto-reload > Edit. Trigger: balance below $10. Reload: $25. It stays off during development on purpose (running out of prepaid credits is a cheap, recoverable stop while learning the burn rate); once strangers use the generator, a stalled API is a broken product.
+- [ ] Workspace spend limit is set ($25/month for Phase 1) with email notifications at $12.50 (50%) and $20 (80%). If the cap is raised later, move both notification amounts up with it (see standing reminders above).
+- [ ] Workspace rate limits: Sonnet 5.5 requests capped at 20/min; unused models (Opus 5.5, Fable, Opus 5) set to the lowest value the dialog allows.
+- [ ] A separate `drillday-prod` API key exists for Vercel; the dev key stays on the laptop only. Key lifetimes: dev key is a personal key with a 90-day custom expiration; prod key is a service account key (not tied to the founder's user) with a 1-year expiration. Anthropic emails 7 days before expiry; on that email, create the replacement, deploy it, confirm requests succeed, delete the old key. Expiration cannot be changed after creation, so a lapsed key means a new key, not an extension.
+- [ ] Vercel env vars set server-side only: `ANTHROPIC_API_KEY`, `SUPABASE_SECRET_KEY`, `ADMIN_PASSWORD`, `IP_HASH_SALT`; `LLM_PROVIDER=anthropic`.
+- [ ] Supabase: production URL added to Auth redirect URLs; legacy `anon` / `service_role` JWT keys disabled under Settings > API Keys; project moved to Pro if it must stay unpaused.
+- [ ] Cloudflare Turnstile added to the generator form if abuse appears in `events`.
+
+Before Phase 2 (accounts) goes live:
+- [ ] Raise the spend limit to $50 to $100 and move the notification amounts to 50% and 80% of the new cap.
+- [ ] Privacy page states that no health data or card numbers are collected.
+
+Deferred until the platform supports it:
+- [ ] **Switch Anthropic auth from the API key to Workload Identity Federation (WIF).** Today WIF supports AWS, Google Cloud, Azure, GitHub Actions, Kubernetes, SPIFFE, Okta and "Custom OIDC"; local development has no identity provider and Vercel is not a listed provider, so the app uses an API key. Revisit when (a) the app moves to AWS or GCP, or (b) Vercel's OIDC tokens are confirmed to work through the Custom OIDC tile. Migration path from the docs: configure the issuer, service account and federation rule in Console > Settings > Workload identity; set `ANTHROPIC_FEDERATION_RULE_ID`, `ANTHROPIC_ORGANIZATION_ID`, `ANTHROPIC_SERVICE_ACCOUNT_ID`, `ANTHROPIC_WORKSPACE_ID` and `ANTHROPIC_IDENTITY_TOKEN_FILE` in the deployment; unset `ANTHROPIC_API_KEY` there (it takes precedence and would silently shadow federation); then delete the prod API key. Because the client is constructed as `new Anthropic()` with no explicit key (section 4), no code changes are needed. Reference: https://platform.claude.com/docs/en/manage-claude/workload-identity-federation
