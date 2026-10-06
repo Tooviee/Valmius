@@ -1,4 +1,5 @@
 import { defineConfig, devices } from "@playwright/test";
+import { E2E_TEST_IP } from "./tests/helpers/test-data";
 
 // A port of its own, and never reusing a running server, so the smoke test cannot
 // attach to a dev server that was started with LLM_PROVIDER=anthropic.
@@ -11,9 +12,14 @@ export default defineConfig({
   workers: 1,
   forbidOnly: !!process.env.CI,
   reporter: [["list"]],
+  // Clears and then removes the rows the tests create in the hosted Supabase project.
+  globalSetup: "./tests/e2e/global-setup.ts",
+  globalTeardown: "./tests/e2e/global-teardown.ts",
   use: {
     baseURL,
     trace: "retain-on-failure",
+    // Every request carries a reserved test IP, so rate limits and events are isolated.
+    extraHTTPHeaders: { "x-forwarded-for": E2E_TEST_IP },
   },
   projects: [{ name: "chromium", use: { ...devices["Desktop Chrome"] } }],
   webServer: {

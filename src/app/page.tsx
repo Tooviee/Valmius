@@ -2,7 +2,7 @@ import Link from "next/link";
 import { NotifyForm } from "@/components/landing/notify-form";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
-import { Button } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button";
 
 // Copy follows SPEC.md section 9.1: name the exact control IDs we evidence, nothing broader,
 // and never claim that Drill Day makes a company compliant.
@@ -66,17 +66,12 @@ export default function HomePage() {
               the after-action report that auditors, insurers and regulators ask for.
             </p>
             <div className="flex flex-wrap items-center gap-3">
-              <Button size="lg" nativeButton={false} render={<Link href="/generate" />}>
+              <Link href="/generate" className={buttonVariants({ size: "lg" })}>
                 Generate a free tabletop scenario
-              </Button>
-              <Button
-                size="lg"
-                variant="outline"
-                nativeButton={false}
-                render={<a href="#notify" />}
-              >
+              </Link>
+              <a href="#notify" className={buttonVariants({ size: "lg", variant: "outline" })}>
                 Notify me when it launches
-              </Button>
+              </a>
             </div>
             <p className="text-sm text-muted-foreground">
               The free generator is live today. The full product is in development.

@@ -63,6 +63,9 @@ export function ScenarioGenerator() {
           <div className="space-y-2">
             <Label htmlFor="industry">Industry</Label>
             <NativeSelect
+              // React resets the form after the action; remounting the select is what makes
+              // it pick up the echoed value instead of the placeholder.
+              key={values.industry}
               id="industry"
               name="industry"
               required
@@ -86,6 +89,7 @@ export function ScenarioGenerator() {
           <div className="space-y-2">
             <Label htmlFor="headcountBand">Company size</Label>
             <NativeSelect
+              key={values.headcountBand}
               id="headcountBand"
               name="headcountBand"
               required
@@ -169,6 +173,7 @@ export function ScenarioGenerator() {
             Anything else we should know? <span className="text-muted-foreground">(optional)</span>
           </Label>
           <Textarea
+            key={values.context}
             id="context"
             name="context"
             rows={3}
