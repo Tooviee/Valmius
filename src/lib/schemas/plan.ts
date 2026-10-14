@@ -99,13 +99,15 @@ export const SECTION_MARKDOWN_MAX_LENGTH = 20_000;
 export const SECTION_ORIGINS = ["model", "matrix", "template", "user"] as const;
 export type SectionOrigin = (typeof SECTION_ORIGINS)[number];
 
-/** What the model returns for one section (SPEC.md section 7: title, markdown, framework_refs). */
+/**
+ * What the model returns for one section (SPEC.md section 7: title, markdown, framework_refs).
+ * No transforms or trims here: the Anthropic provider turns this schema into a JSON schema
+ * for constrained output, and transforms cannot be represented there. Cleanup happens in
+ * the generator after parsing.
+ */
 export const planSectionOutputSchema = z.object({
-  markdown: z.string().trim().min(200).max(SECTION_MARKDOWN_MAX_LENGTH),
-  framework_refs: z
-    .array(z.enum(FRAMEWORK_REFS))
-    .max(8)
-    .transform((refs) => [...new Set(refs)]),
+  markdown: z.string().min(200).max(SECTION_MARKDOWN_MAX_LENGTH),
+  framework_refs: z.array(z.enum(FRAMEWORK_REFS)).max(8),
 });
 export type PlanSectionOutput = z.infer<typeof planSectionOutputSchema>;
 

@@ -47,7 +47,9 @@ function checkSection(completion: LlmCompletion, sectionId: ModelSectionId): Che
   if (!parsed.ok) return { ok: false, problem: "- It was not a valid JSON object." };
   const result = planSectionOutputSchema.safeParse(parsed.value);
   if (!result.success) return { ok: false, problem: describeIssues(result.error) };
-  if (/^#\s|\n#\s/.test(result.data.markdown)) {
+  const markdown = result.data.markdown.trim();
+  if (markdown.length < 200) return { ok: false, problem: "- markdown: too short." };
+  if (/^#\s|\n#\s/.test(markdown)) {
     return { ok: false, problem: "- markdown: must not contain a top-level '#' heading." };
   }
   return {
@@ -55,8 +57,8 @@ function checkSection(completion: LlmCompletion, sectionId: ModelSectionId): Che
     section: {
       id: sectionId,
       title: planSectionMeta(sectionId).title,
-      markdown: result.data.markdown,
-      framework_refs: result.data.framework_refs,
+      markdown,
+      framework_refs: [...new Set(result.data.framework_refs)],
       origin: "model",
     },
   };

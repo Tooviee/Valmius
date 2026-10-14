@@ -42,6 +42,9 @@ reminders (spend cap, auto-reload, launch checklist): raise them whenever their 
 
 - Next 16: read `node_modules/next/dist/docs` before using an API; `proxy.ts` replaced middleware.
 - `claude-sonnet-5-5` rejects `temperature`; thinking is always on, `effort` is the control.
+- LLM output schemas (`scenarioSchema`, `planSectionOutputSchema`) go to the API as JSON schema: no
+  `.transform`, `.trim` or `.refine` on them, clean up after parsing. `tests/unit/output-schemas.test.ts`
+  guards this; the mock provider never notices a violation, only a real call does.
 - react-pdf: no `lineHeight` on `<Page>` (it hides the dynamic page number); set it per text style in pt.
 - pnpm needs install scripts allowed in `pnpm-workspace.yaml` (`allowBuilds`) for esbuild and supabase.
 - Magic links only work once the Supabase email templates link to `/auth/confirm` with the token hash
