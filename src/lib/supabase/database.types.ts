@@ -64,7 +64,69 @@ export type Database = {
           org_id?: string | null
           properties?: Json
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "events_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ir_plans: {
+        Row: {
+          approved_at: string | null
+          approved_by_name: string | null
+          created_at: string
+          created_by: string | null
+          id: string
+          org_id: string
+          questionnaire_id: string
+          sections: Json
+          status: string
+          version: number
+        }
+        Insert: {
+          approved_at?: string | null
+          approved_by_name?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          org_id: string
+          questionnaire_id: string
+          sections: Json
+          status?: string
+          version: number
+        }
+        Update: {
+          approved_at?: string | null
+          approved_by_name?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          org_id?: string
+          questionnaire_id?: string
+          sections?: Json
+          status?: string
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ir_plans_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ir_plans_questionnaire_id_fkey"
+            columns: ["questionnaire_id"]
+            isOneToOne: false
+            referencedRelation: "questionnaires"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       leads: {
         Row: {
@@ -95,6 +157,106 @@ export type Database = {
           source?: string
         }
         Relationships: []
+      }
+      org_members: {
+        Row: {
+          created_at: string
+          org_id: string
+          role: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          org_id: string
+          role: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          org_id?: string
+          role?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "org_members_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      organizations: {
+        Row: {
+          created_at: string
+          created_by: string
+          frameworks: string[]
+          headcount_band: string
+          id: string
+          industry: string
+          name: string
+          timezone: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          frameworks?: string[]
+          headcount_band: string
+          id?: string
+          industry: string
+          name: string
+          timezone: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          frameworks?: string[]
+          headcount_band?: string
+          id?: string
+          industry?: string
+          name?: string
+          timezone?: string
+        }
+        Relationships: []
+      }
+      questionnaires: {
+        Row: {
+          answers: Json
+          completed_at: string | null
+          created_at: string
+          created_by: string | null
+          id: string
+          org_id: string
+          updated_at: string
+        }
+        Insert: {
+          answers?: Json
+          completed_at?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          org_id: string
+          updated_at?: string
+        }
+        Update: {
+          answers?: Json
+          completed_at?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          org_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "questionnaires_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       rate_limits: {
         Row: {
@@ -145,7 +307,15 @@ export type Database = {
           title?: string
           type?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "scenarios_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {
@@ -156,6 +326,16 @@ export type Database = {
         Args: { p_key: string; p_limit: number; p_window_seconds: number }
         Returns: boolean
       }
+      create_organization: {
+        Args: {
+          p_frameworks: string[]
+          p_headcount_band: string
+          p_industry: string
+          p_name: string
+          p_timezone: string
+        }
+        Returns: string
+      }
       event_counts_by_day: {
         Args: { p_since: string }
         Returns: {
@@ -164,6 +344,8 @@ export type Database = {
           name: string
         }[]
       }
+      is_org_member: { Args: { p_org_id: string }; Returns: boolean }
+      is_org_owner: { Args: { p_org_id: string }; Returns: boolean }
       purge_stale_rate_limits: { Args: never; Returns: undefined }
     }
     Enums: {

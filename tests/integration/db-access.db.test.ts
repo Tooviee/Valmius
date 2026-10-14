@@ -1,7 +1,8 @@
 import { randomUUID } from "node:crypto";
 import { createClient } from "@supabase/supabase-js";
-import { afterAll, describe, expect, it } from "vitest";
+import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import type { Database } from "@/lib/supabase/database.types";
+import { createTestUser, deleteTestUser } from "../helpers/auth-users";
 import { loadSupabaseTestEnv } from "../helpers/env";
 
 // Proves the Phase 1 migration's grants and RLS against the hosted project:
@@ -13,9 +14,30 @@ const anon = createClient<Database>(env.supabaseUrl, env.publishableKey, options
 
 const PERMISSION_DENIED = "42501";
 const privateScenarioId = randomUUID();
+let ownerId: string;
+let orgId: string;
+
+// Since Phase 2, scenarios.org_id is a foreign key, so an org-owned scenario needs a real
+// organization, which in turn needs a real user. Deleting the user cascades both away.
+beforeAll(async () => {
+  ownerId = (await createTestUser(admin, "db-access")).id;
+  const { data, error } = await admin
+    .from("organizations")
+    .insert({
+      name: "DB access test org",
+      industry: "other",
+      headcount_band: "1-10",
+      timezone: "UTC",
+      created_by: ownerId,
+    })
+    .select("id")
+    .single();
+  if (error) throw new Error(`Could not create test organization: ${error.message}`);
+  orgId = data.id;
+});
 
 afterAll(async () => {
-  await admin.from("scenarios").delete().eq("id", privateScenarioId);
+  await deleteTestUser(admin, ownerId);
 });
 
 describe("phase 1 grants and RLS", () => {
@@ -63,7 +85,7 @@ describe("phase 1 grants and RLS", () => {
   it("publishable key sees public packs but not an org-owned scenario", async () => {
     const { error: insertError } = await admin.from("scenarios").insert({
       id: privateScenarioId,
-      org_id: randomUUID(),
+      org_id: orgId,
       type: "custom",
       title: "Private test scenario",
       content: {},
