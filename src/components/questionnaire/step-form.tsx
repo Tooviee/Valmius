@@ -4,7 +4,7 @@ import Link from "next/link";
 import { startTransition, useActionState, useEffect, useMemo, useRef } from "react";
 import type { OrganizationFieldValues } from "@/components/app/organization-fields";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import {
   LAST_STEP,
   QUESTIONNAIRE_STEPS,
@@ -111,9 +111,12 @@ export function QuestionnaireStepForm({
 
       <div className="flex flex-wrap items-center justify-between gap-4">
         {step > 1 ? (
-          <Button render={<Link href={`/app/questionnaire?step=${step - 1}`} />} variant="outline">
+          <Link
+            href={`/app/questionnaire?step=${step - 1}`}
+            className={buttonVariants({ variant: "outline" })}
+          >
             Back
-          </Button>
+          </Link>
         ) : (
           <span />
         )}

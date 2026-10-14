@@ -3,7 +3,7 @@ import Link from "next/link";
 import { QuestionnaireProgress } from "@/components/questionnaire/progress";
 import { QuestionnaireStepForm } from "@/components/questionnaire/step-form";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Button } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button";
 import { requireOrg } from "@/lib/auth/session";
 import {
   isStepComplete,
@@ -62,9 +62,9 @@ export default async function QuestionnairePage({
             You can keep editing answers here. When you are ready, generate the plan.
           </AlertDescription>
           <div className="mt-2">
-            <Button render={<Link href="/app/plan" />} size="sm">
+            <Link href="/app/plan" className={buttonVariants({ size: "sm" })}>
               Go to the plan
-            </Button>
+            </Link>
           </div>
         </Alert>
       )}

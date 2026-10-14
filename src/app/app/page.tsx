@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import {
   Card,
   CardContent,
@@ -90,13 +90,13 @@ export default async function DashboardPage() {
             )}
           </CardContent>
           <CardFooter>
-            <Button render={<Link href="/app/questionnaire" />} size="sm">
+            <Link href="/app/questionnaire" className={buttonVariants({ size: "sm" })}>
               {questionnaireDone
                 ? "Review answers"
                 : questionnaire.data
                   ? "Continue"
                   : "Start questionnaire"}
-            </Button>
+            </Link>
           </CardFooter>
         </Card>
 
@@ -125,13 +125,13 @@ export default async function DashboardPage() {
           </CardContent>
           <CardFooter>
             {latestPlan.data ? (
-              <Button render={<Link href="/app/plan" />} size="sm">
+              <Link href="/app/plan" className={buttonVariants({ size: "sm" })}>
                 Open plan
-              </Button>
+              </Link>
             ) : questionnaireDone ? (
-              <Button render={<Link href="/app/plan" />} size="sm">
+              <Link href="/app/plan" className={buttonVariants({ size: "sm" })}>
                 Generate plan
-              </Button>
+              </Link>
             ) : (
               <Button size="sm" disabled>
                 Complete the questionnaire first

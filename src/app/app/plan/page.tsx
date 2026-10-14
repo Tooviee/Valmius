@@ -5,7 +5,7 @@ import { GeneratePlanForm } from "@/components/plan/generate-plan-form";
 import { PlanEditor } from "@/components/plan/plan-editor";
 import { VersionNav } from "@/components/plan/version-nav";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { requireOrg } from "@/lib/auth/session";
 import { loadPlan, loadPlanFacts, loadPlanVersions } from "@/lib/plan/load";
@@ -68,7 +68,9 @@ export default async function PlanPage({
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <Button render={<Link href="/app/questionnaire" />}>Open the questionnaire</Button>
+              <Link href="/app/questionnaire" className={buttonVariants()}>
+                Open the questionnaire
+              </Link>
             </CardContent>
           </Card>
         )}
@@ -102,20 +104,18 @@ export default async function PlanPage({
           <VersionNav versions={versions} current={plan.version} />
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          <Button
-            render={<a href={`/app/plan/${plan.id}/export/pdf`} />}
-            variant="outline"
-            size="sm"
+          <a
+            href={`/app/plan/${plan.id}/export/pdf`}
+            className={buttonVariants({ variant: "outline", size: "sm" })}
           >
             Export PDF
-          </Button>
-          <Button
-            render={<a href={`/app/plan/${plan.id}/export/docx`} />}
-            variant="outline"
-            size="sm"
+          </a>
+          <a
+            href={`/app/plan/${plan.id}/export/docx`}
+            className={buttonVariants({ variant: "outline", size: "sm" })}
           >
             Export Word
-          </Button>
+          </a>
         </div>
       </div>
 
