@@ -28,7 +28,7 @@ export default async function LoginPage({
             Enter your work email and we will send you a link that signs you in.
           </p>
         </div>
-        <LoginForm linkError={error === "link"} />
+        <LoginForm linkError={error === "link" || error === "device" ? error : null} />
       </main>
       <SiteFooter />
     </>

@@ -47,8 +47,9 @@ reminders (spend cap, auto-reload, launch checklist): raise them whenever their 
   guards this; the mock provider never notices a violation, only a real call does.
 - react-pdf: no `lineHeight` on `<Page>` (it hides the dynamic page number); set it per text style in pt.
 - pnpm needs install scripts allowed in `pnpm-workspace.yaml` (`allowBuilds`) for esbuild and supabase.
-- Magic links only work once the Supabase email templates link to `/auth/confirm` with the token hash
-  (SUPABASE-SETUP.md section 5b); the built-in mailer delivers only to Supabase team members.
+- Supabase locks email-template editing until custom SMTP is configured. `/auth/confirm` therefore
+  accepts both the default link (`?code=`, same browser only) and the token-hash link that the custom
+  templates send (SUPABASE-SETUP.md section 5b). The built-in mailer delivers only to Supabase team members.
 - Base UI `Button` with `render={<Link/>}` must not claim to be a native button; the wrapper handles it.
 - `toPdfText` trims; use `toPdfInline` for runs inside a paragraph or the spaces around bold text vanish.
 - An approved `ir_plans` row is frozen by a trigger (everything except `created_by`); edits are new versions.

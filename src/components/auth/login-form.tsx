@@ -16,7 +16,19 @@ const MESSAGES: Partial<Record<LoginState["status"], string>> = {
   error: "We could not send the email just now. Please try again.",
 };
 
-export function LoginForm({ linkError }: { linkError: boolean }) {
+const LINK_ERRORS: Record<string, { title: string; body: string }> = {
+  link: {
+    title: "That link no longer works",
+    body: "Sign-in links work once and expire after an hour. Request a new one below.",
+  },
+  device: {
+    title: "Open the link where you requested it",
+    body: "This sign-in link only works in the browser that asked for it. Request a new link here, then open it in this same browser.",
+  },
+};
+
+export function LoginForm({ linkError }: { linkError: string | null }) {
+  const linkMessage = linkError ? LINK_ERRORS[linkError] : undefined;
   const [state, formAction, pending] = useActionState(requestLoginLinkAction, initialState);
 
   if (state.status === "sent") {
@@ -33,12 +45,10 @@ export function LoginForm({ linkError }: { linkError: boolean }) {
 
   return (
     <form action={formAction} className="space-y-4">
-      {linkError && (
+      {linkMessage && (
         <Alert variant="destructive">
-          <AlertTitle>That link no longer works</AlertTitle>
-          <AlertDescription>
-            Sign-in links work once and expire after an hour. Request a new one below.
-          </AlertDescription>
+          <AlertTitle>{linkMessage.title}</AlertTitle>
+          <AlertDescription>{linkMessage.body}</AlertDescription>
         </Alert>
       )}
       <div className="space-y-2">

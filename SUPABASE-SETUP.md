@@ -60,17 +60,20 @@ Dashboard > Authentication. The app signs people in with an emailed link and not
 - Site URL: `http://localhost:3000` for now; change it to the production URL when you deploy.
 - Redirect URLs: add `http://localhost:3000/**`. When you deploy, add `https://*.vercel.app/**` and `https://yourdomain.com/**` the same way. The app passes `<site>/auth/confirm` as the redirect target, and Supabase refuses any target that is not on this list.
 
-### 5b. Email templates (required, or sign-in links will not work)
+### 5b. Email templates (locked until custom SMTP exists)
 
-The app verifies links server-side with a token hash (`/auth/confirm`), so a link works from any browser or device, including a phone that never visited the site. The default templates use a session-based link instead, so both templates below must be changed.
+The dashboard only lets you edit the Magic Link and Confirm signup templates after custom SMTP is configured (the banner "Set up custom SMTP to edit templates"). Until then Supabase sends its default templates, and the app handles their link too:
 
-Authentication > Emails (templates). For **Magic Link** and for **Confirm signup**, replace the `<a href="...">` with:
+- **Default template (now).** The emailed link goes through Supabase's verify endpoint and lands on `/auth/confirm?code=...`. The app exchanges the code using a cookie the sign-in form set, so the link must be opened in the same browser that requested it. That is fine for your own testing. No template change is needed; only the redirect URL in 5a.
+- **Custom template (after custom SMTP, before outsiders sign in).** Authentication > Emails, open **Magic Link** and **Confirm signup**, and replace the `<a href="...">` with:
 
-```html
-<a href="{{ .RedirectTo }}?token_hash={{ .TokenHash }}&type=email">Sign in to Drill Day</a>
-```
+  ```html
+  <a href="{{ .RedirectTo }}?token_hash={{ .TokenHash }}&type=email">Sign in to Drill Day</a>
+  ```
 
-Keep the rest of each template as you like. `{{ .RedirectTo }}` is the `/auth/confirm` URL the app sends; `{{ .TokenHash }}` is the one-time token; `type=email` lets the same handler confirm first-time and returning addresses. Links expire after one hour (Authentication > Sign In / Providers > Email > "Email OTP expiration") and work once.
+  This link carries a one-time token hash that `/auth/confirm` verifies directly, so it works from any browser or device, including a phone that never visited the site. `{{ .RedirectTo }}` is the `/auth/confirm` URL the app sends; `type=email` lets one handler confirm first-time and returning addresses.
+
+Links expire after one hour (Authentication > Sign In / Providers > Email > "Email OTP expiration") and work once.
 
 ### 5c. Who can receive the emails
 
