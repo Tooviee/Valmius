@@ -1,7 +1,7 @@
 import { Document, Page, StyleSheet, Text, View } from "@react-pdf/renderer";
 import { markdownToBlocks, type Block, type InlineRun } from "@/lib/markdown/blocks";
 import { approvalLine, footerLine, formatPlanDate, type PlanExportInput } from "@/lib/plan/export";
-import { toPdfText } from "./text";
+import { toPdfInline, toPdfText } from "./text";
 
 const colors = { text: "#171717", muted: "#525252", line: "#c4c4c4", fill: "#f4f4f5" };
 const lineHeight = (fontSize: number) => `${(fontSize * 1.45).toFixed(1)}pt`;
@@ -118,7 +118,7 @@ function Runs({ runs }: { runs: InlineRun[] }) {
                 : undefined;
         return (
           <Text key={index} style={style}>
-            {toPdfText(run.text)}
+            {toPdfInline(run.text)}
           </Text>
         );
       })}

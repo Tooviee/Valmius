@@ -100,3 +100,12 @@ describe("renderPlanDocx", () => {
     expect(raw).toContain("word/footer1.xml");
   });
 });
+
+describe("inline text cleanup", () => {
+  it("keeps the spaces that separate styled runs", async () => {
+    const { toPdfInline, toPdfText } = await import("@/lib/pdf/text");
+    expect(toPdfInline("The ")).toBe("The ");
+    expect(toPdfInline(" (IT Manager) → act")).toBe(" (IT Manager) -> act");
+    expect(toPdfText("  trimmed  ")).toBe("trimmed");
+  });
+});
