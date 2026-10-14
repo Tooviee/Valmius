@@ -11,6 +11,9 @@ export const RATE_LIMITS = {
   view: { prefix: "view", limit: 60, windowSeconds: 3600 },
   // Counts failed admin sign-ins only.
   admin_login: { prefix: "admin", limit: 10, windowSeconds: 3600 },
+  // Magic-link requests. Supabase has its own email limit; this one keeps the form from
+  // being used to flood someone's inbox.
+  login: { prefix: "login", limit: 10, windowSeconds: 3600 },
 } as const;
 
 export type RateLimitName = keyof typeof RATE_LIMITS;

@@ -2,16 +2,17 @@ import { NextResponse, type NextRequest } from "next/server";
 import { ADMIN_REALM, isAdminAuthorized } from "@/lib/admin-auth";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { getIpHash } from "@/lib/rate-limit/ip";
+import { updateSession } from "@/lib/supabase/proxy-session";
 
 export const config = {
-  matcher: ["/admin/:path*"],
+  matcher: ["/admin/:path*", "/app/:path*"],
 };
 
 /**
- * Basic auth in front of /admin (Phase 1 only; real auth arrives in Phase 2).
- * Failed attempts count against a per-IP limit so the password cannot be brute-forced.
+ * Basic auth in front of /admin (Phase 1). Failed attempts count against a per-IP limit
+ * so the password cannot be brute-forced.
  */
-export async function proxy(request: NextRequest) {
+async function adminGate(request: NextRequest): Promise<NextResponse> {
   const authorization = request.headers.get("authorization");
   const ipHash = getIpHash(request.headers);
 
@@ -33,4 +34,22 @@ export async function proxy(request: NextRequest) {
       "Content-Type": "text/plain; charset=utf-8",
     },
   });
+}
+
+/**
+ * /app/* (Phase 2): refreshes the Supabase session and sends signed-out visitors to
+ * /login. Server Functions on these pages are POSTs to the same paths, so they are
+ * covered too; each one still checks the session itself (Next.js data security guide).
+ */
+export async function proxy(request: NextRequest) {
+  const { pathname } = request.nextUrl;
+  if (pathname.startsWith("/admin")) return adminGate(request);
+
+  const { response, userId } = await updateSession(request);
+  if (!userId) {
+    const loginUrl = new URL("/login", request.url);
+    if (pathname !== "/app") loginUrl.searchParams.set("next", pathname);
+    return NextResponse.redirect(loginUrl);
+  }
+  return response;
 }

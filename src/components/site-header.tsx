@@ -13,12 +13,15 @@ export function SiteHeader() {
           </span>
           Drill Day
         </Link>
-        <nav className="text-sm">
+        <nav className="flex items-center gap-5 text-sm">
           <Link
             href="/generate"
             className="text-muted-foreground transition-colors hover:text-foreground"
           >
             Free scenario generator
+          </Link>
+          <Link href="/login" className="font-medium transition-colors hover:text-foreground">
+            Sign in
           </Link>
         </nav>
       </div>

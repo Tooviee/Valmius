@@ -7,7 +7,10 @@ export type EventName =
   | "scenario_generated"
   | "generator_rate_limited"
   | "email_submitted"
-  | "pdf_downloaded";
+  | "pdf_downloaded"
+  | "login_link_requested"
+  | "login_link_failed"
+  | "org_created";
 
 export type EventProperties = { [key: string]: Json | undefined };
 
@@ -19,11 +22,12 @@ export async function logEvent(
   name: EventName,
   properties: EventProperties,
   ipHash: string | null,
+  orgId: string | null = null,
 ): Promise<void> {
   try {
     const { error } = await getAdminClient()
       .from("events")
-      .insert({ name, properties, ip_hash: ipHash });
+      .insert({ name, properties, ip_hash: ipHash, org_id: orgId });
     if (error) console.error(`[events] could not log ${name}: ${error.message}`);
   } catch (error) {
     console.error(`[events] could not log ${name}:`, error);

@@ -27,3 +27,7 @@ export type LeadState =
   | { status: "rate_limited" }
   | { status: "error" }
   | { status: "ok" };
+
+export type LoginState = {
+  status: "idle" | "invalid" | "rate_limited" | "error" | "sent";
+};
