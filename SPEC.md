@@ -19,7 +19,7 @@ Why it can win: the cheapest purpose-built competitor charges $4,800 a year for 
 
 Goals: ship Phases 1 to 4 so one real company can generate a plan, run an exercise with 3 to 6 people, and download an after-action PDF an auditor would accept.
 
-Non-goals for MVP (do not build): billing, email sending, Vanta/Drata API push, multi-org consultant accounts, white-label, SSO/SAML, live multi-user realtime editing, mobile apps, storing any health data (PHI) or payment card numbers (PAN), automated detection or integration with security tools.
+Non-goals for MVP (do not build): billing, email sending by the app itself (Supabase's own sign-in emails are configured, not built; see section 14, "Domain and email"), Vanta/Drata API push, multi-org consultant accounts, white-label, SSO/SAML, live multi-user realtime editing, mobile apps, storing any health data (PHI) or payment card numbers (PAN), automated detection or integration with security tools.
 
 ## 4. Tech stack
 
@@ -250,7 +250,7 @@ Sources: [AWS Prescriptive Guidance, CMMC Level 2 on AWS](https://docs.aws.amazo
 
 ## 13. Open questions for the founder (answer before Phase 2)
 
-1. Product name: decided, **Drill Day** (display name with the space; `drillday` as the package, repo and code slug; "Drill Day" in UI copy and PDF headers). Domain: being registered; use `NEXT_PUBLIC_SITE_URL` everywhere a URL is needed rather than hardcoding one.
+1. Product name: decided, **Drill Day** (display name with the space; `drillday` as the package, repo and code slug; "Drill Day" in UI copy and PDF headers). Domain: not registered yet as of 2026-10-14 (check `drillday.com` before settling for a variant such as `mydrillday.com`); the order of domain, mailbox and email-sending steps is in section 14, "Domain and email". Use `NEXT_PUBLIC_SITE_URL` everywhere a URL is needed rather than hardcoding one.
 2. Google sign-in at launch, or magic link only?
 3. Pricing page in Phase 1 (price anchors shown) or hide pricing until validation data is in?
 4. Will you run the first real exercise with a friendly company? If yes, which industry, so the first scenario pack variants target it.
@@ -264,6 +264,13 @@ Standing reminders (repeat whenever the trigger comes up in conversation, not on
 - **Spend cap and alerts move together.** Whenever the founder mentions raising the Anthropic workspace spend limit, or a phase transition calls for it, remind them that the two email notifications are fixed dollar amounts and do not scale: set them to 50% and 80% of the new cap (for example, a $100 cap means notifications at $50 and $80). Ask for the new cap and compute the two numbers for them.
 - **Auto-reload goes on at public launch.** Whenever the founder mentions deploying, launching, sharing the generator link, or going public, remind them to turn on auto-reload (first item below) if it is still off.
 
+Domain and email, in this order (none of it is needed for local development or the Phase 2 manual check, which works with the address you log in to Supabase with):
+- [ ] **Register the domain.** Check `drillday.com` first, then variants. Buy from a registrar that sells at cost (Cloudflare Registrar or Porkbun) and keep DNS at Cloudflare, so email routing, the sending provider's records and the Vercel records all live in one place. Record the domain in section 13, question 1.
+- [ ] **Mailbox for people.** Start with free forwarding: Cloudflare Email Routing forwards `support@` and a founder address to the existing Gmail, and Gmail can send as that address. Move to Google Workspace only when real inboxes are worth the per-user fee. Keep the Supabase, Anthropic and Vercel accounts on the current address; add the Drill Day address as a team member later instead of migrating.
+- [ ] **Sign-in email templates.** Authentication > Emails > Templates: the Magic Link and Confirm signup templates link to `/auth/confirm` with the token hash (SUPABASE-SETUP.md section 5b). Needed before any sign-in works, including the manual check; no domain required.
+- [ ] **Custom SMTP, before anyone outside the Supabase team signs in.** Supabase's built-in mailer delivers only to team members, a few messages an hour. Create a Resend account, add the domain and publish the DNS records it gives (SPF, DKIM, DMARC), then paste Resend's SMTP host, port, user and password into Authentication > Emails > SMTP Settings with sender `Drill Day <login@yourdomain>` and a reply-to of the support mailbox. Raise the email limit under Authentication > Rate Limits. Test by signing in from an address that is not on the Supabase team. The same Resend account carries the Phase 5 reminder emails.
+- [ ] **Domain at deploy.** Add the domain to the Vercel project, set `NEXT_PUBLIC_SITE_URL` to it, and set the Supabase Site URL and redirect URL (see the launch list below).
+
 Before the free generator goes public:
 - [ ] **Turn on Anthropic auto-reload.** Console > Settings > Billing > Auto-reload > Edit. Trigger: balance below $10. Reload: $25. It stays off during development on purpose (running out of prepaid credits is a cheap, recoverable stop while learning the burn rate); once strangers use the generator, a stalled API is a broken product.
 - [ ] Workspace spend limit is set ($25/month for Phase 1) with email notifications at $12.50 (50%) and $20 (80%). If the cap is raised later, move both notification amounts up with it (see standing reminders above).
@@ -274,6 +281,7 @@ Before the free generator goes public:
 - [ ] Cloudflare Turnstile added to the generator form if abuse appears in `events`.
 
 Before Phase 2 (accounts) goes live:
+- [ ] Custom SMTP is live and the sign-in templates point at `/auth/confirm` (see "Domain and email" above); a sign-in from an outside address arrives within a minute.
 - [ ] Raise the spend limit to $50 to $100 and move the notification amounts to 50% and 80% of the new cap.
 - [ ] Privacy page states that no health data or card numbers are collected.
 
