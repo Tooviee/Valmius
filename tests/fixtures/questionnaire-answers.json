@@ -1,0 +1,39 @@
+{
+  "next_audit_date": "2027-03-15",
+  "data_types": ["customer_pii", "health_data", "employee_data"],
+  "hosting": ["aws", "saas_only"],
+  "identity_provider": "google_workspace",
+  "mfa_status": "partial",
+  "key_systems": "Google Workspace for email and files, Athena for patient scheduling, QuickBooks Online, Slack, GitHub for the patient portal code, Stripe for card payments through a hosted page.",
+  "roles": {
+    "it_security_lead": { "title": "IT Manager", "name": "", "backup": "Senior Engineer" },
+    "executive_decision_maker": { "title": "CEO", "name": "", "backup": "COO" },
+    "legal": { "title": "Outside counsel via the COO", "name": "", "backup": "" },
+    "customer_communications": {
+      "title": "Head of Patient Services",
+      "name": "",
+      "backup": "Clinic Manager"
+    }
+  },
+  "outside_parties": {
+    "msp": "Northwind IT (helpdesk and laptops)",
+    "outside_counsel": "Harbor Legal LLP",
+    "insurer_name": "Coalition",
+    "insurer_claims_phone": "+1 555 0100",
+    "forensics_retainer": "no"
+  },
+  "monitoring": ["edr_antivirus", "cloud_alerts"],
+  "backups": {
+    "location": "AWS Backup for RDS and S3; Google Workspace retention for documents",
+    "frequency": "Nightly, kept 35 days",
+    "last_restore_test": "never"
+  },
+  "customer_notification_obligations": "Hospital network contract requires notice within 48 hours of a confirmed breach affecting their referred patients.",
+  "regulatory_obligations": ["hipaa", "state_breach_laws"],
+  "out_of_band_channel": "signal_group",
+  "out_of_band_details": "Leadership Signal group, set up in 2025",
+  "had_incident": "yes",
+  "incident_type": "Phishing email led to one compromised mailbox in 2025",
+  "review_cadence": "annual",
+  "plan_approver": "CEO"
+}

@@ -51,3 +51,9 @@ export type OrganizationState =
       fieldErrors: Partial<Record<OrganizationField, string>>;
     }
   | { status: "error"; values: OrganizationFormValues };
+
+export type QuestionnaireState =
+  | { status: "idle" }
+  | { status: "saved"; savedAt: string }
+  | { status: "invalid"; fieldErrors: Record<string, string>; savedAt: string | null }
+  | { status: "error" };

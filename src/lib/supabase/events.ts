@@ -10,7 +10,8 @@ export type EventName =
   | "pdf_downloaded"
   | "login_link_requested"
   | "login_link_failed"
-  | "org_created";
+  | "org_created"
+  | "questionnaire_completed";
 
 export type EventProperties = { [key: string]: Json | undefined };
 
