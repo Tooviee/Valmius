@@ -11,7 +11,12 @@ export type EventName =
   | "login_link_requested"
   | "login_link_failed"
   | "org_created"
-  | "questionnaire_completed";
+  | "questionnaire_completed"
+  | "plan_section_generated"
+  | "plan_generated"
+  | "plan_saved"
+  | "plan_approved"
+  | "plan_exported";
 
 export type EventProperties = { [key: string]: Json | undefined };
 

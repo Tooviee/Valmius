@@ -1,10 +1,18 @@
 import "server-only";
+import type { PlanFacts } from "@/lib/plan/facts";
 import type { GeneratorInput } from "@/lib/schemas/generator";
+import type { PlanSectionId } from "@/lib/schemas/plan";
+import { generatePlanSectionWith, templateSectionResult } from "./generate-plan-section";
 import { generateScenarioWith, seededScenarioResult } from "./generate-scenario";
-import type { GenerateScenarioResult, LlmProvider } from "./types";
+import type { GeneratePlanSectionResult, GenerateScenarioResult, LlmProvider } from "./types";
 
 export { seededScenarioResult } from "./generate-scenario";
-export type { FallbackReason, GenerateScenarioResult, LlmCallMeta } from "./types";
+export type {
+  FallbackReason,
+  GeneratePlanSectionResult,
+  GenerateScenarioResult,
+  LlmCallMeta,
+} from "./types";
 
 let cached: { name: string; provider: LlmProvider } | undefined;
 
@@ -41,4 +49,17 @@ export async function generateScenario(input: GeneratorInput): Promise<GenerateS
   const provider = await resolveProvider();
   if (!provider) return seededScenarioResult(input, "config_error");
   return generateScenarioWith(provider, input);
+}
+
+/**
+ * Writes one section of an IR plan from the plan facts. Same contract as
+ * generateScenario: validated output or a flagged template fallback, never a throw.
+ */
+export async function generatePlanSection(
+  facts: PlanFacts,
+  sectionId: Exclude<PlanSectionId, "notification_matrix">,
+): Promise<GeneratePlanSectionResult> {
+  const provider = await resolveProvider();
+  if (!provider) return templateSectionResult(facts, sectionId, "config_error");
+  return generatePlanSectionWith(provider, facts, sectionId);
 }

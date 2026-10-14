@@ -1,7 +1,7 @@
 import "server-only";
 import { getAdminClient } from "@/lib/supabase/admin";
 
-/** Per-IP limits for every public endpoint (SPEC.md sections 5 and 11). */
+/** Limits per IP for public endpoints (SPEC.md sections 5 and 11) and per org for model spend. */
 export const RATE_LIMITS = {
   // The limit the spec sets: 5 generations per hour.
   generate: { prefix: "gen", limit: 5, windowSeconds: 3600 },
@@ -14,6 +14,10 @@ export const RATE_LIMITS = {
   // Magic-link requests. Supabase has its own email limit; this one keeps the form from
   // being used to flood someone's inbox.
   login: { prefix: "login", limit: 10, windowSeconds: 3600 },
+  // Per organization (the key is the org id): whole-plan generations and single-section
+  // rewrites, so one account cannot run up the model spend.
+  plan_generate: { prefix: "plan", limit: 10, windowSeconds: 3600 },
+  plan_section: { prefix: "psec", limit: 30, windowSeconds: 3600 },
 } as const;
 
 export type RateLimitName = keyof typeof RATE_LIMITS;
@@ -27,8 +31,9 @@ export type BumpRateLimit = (args: BumpArgs) => PromiseLike<BumpResult>;
 
 const bumpInDatabase: BumpRateLimit = (args) => getAdminClient().rpc("bump_rate_limit", args);
 
-export function rateLimitKey(name: RateLimitName, ipHash: string): string {
-  return `${RATE_LIMITS[name].prefix}:${ipHash}`;
+/** `subject` is the IP hash for public endpoints, or the organization id for app limits. */
+export function rateLimitKey(name: RateLimitName, subject: string): string {
+  return `${RATE_LIMITS[name].prefix}:${subject}`;
 }
 
 /**
@@ -37,13 +42,13 @@ export function rateLimitKey(name: RateLimitName, ipHash: string): string {
  */
 export async function checkRateLimit(
   name: RateLimitName,
-  ipHash: string,
+  subject: string,
   bump: BumpRateLimit = bumpInDatabase,
 ): Promise<RateLimitResult> {
   const { limit, windowSeconds } = RATE_LIMITS[name];
   try {
     const { data, error } = await bump({
-      p_key: rateLimitKey(name, ipHash),
+      p_key: rateLimitKey(name, subject),
       p_limit: limit,
       p_window_seconds: windowSeconds,
     });

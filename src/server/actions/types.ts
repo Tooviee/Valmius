@@ -1,3 +1,4 @@
+import type { PlanSection } from "@/lib/schemas/plan";
 import type { Scenario } from "@/lib/schemas/scenario";
 
 /** The generator form as submitted, echoed back so the form keeps the visitor's choices. */
@@ -57,3 +58,13 @@ export type QuestionnaireState =
   | { status: "saved"; savedAt: string }
   | { status: "invalid"; fieldErrors: Record<string, string>; savedAt: string | null }
   | { status: "error" };
+
+export type GeneratePlanState = { status: "idle" | "rate_limited" | "error" };
+
+export type RegenerateSectionState =
+  | { status: "idle" }
+  | { status: "rate_limited" }
+  | { status: "error" }
+  | { status: "ok"; section: PlanSection };
+
+export type SavePlanState = { status: "idle" | "invalid" | "error" };

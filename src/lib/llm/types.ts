@@ -1,4 +1,5 @@
 import type { z } from "zod";
+import type { PlanSection, PlanSectionId } from "@/lib/schemas/plan";
 import type { PackScenarioType, Scenario } from "@/lib/schemas/scenario";
 
 export type LlmProviderName = "anthropic" | "mock";
@@ -9,7 +10,9 @@ export type LlmUsage = {
 };
 
 /** What is being generated. The mock provider uses it to pick a fixture. */
-export type LlmTask = { kind: "scenario"; scenarioType: PackScenarioType };
+export type LlmTask =
+  | { kind: "scenario"; scenarioType: PackScenarioType }
+  | { kind: "plan_section"; sectionId: Exclude<PlanSectionId, "notification_matrix"> };
 
 export type LlmRequest = {
   task: LlmTask;
@@ -82,5 +85,10 @@ export type LlmCallMeta = {
 
 export type GenerateScenarioResult = {
   scenario: Scenario;
+  meta: LlmCallMeta;
+};
+
+export type GeneratePlanSectionResult = {
+  section: PlanSection;
   meta: LlmCallMeta;
 };
