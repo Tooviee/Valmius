@@ -210,6 +210,36 @@ describe("org-scoped rows", () => {
     expect(error?.code).toBe(CHECK_VIOLATION);
   });
 
+  it("deleting the author of an approved plan does not trip the approved-plan guard", async () => {
+    const author = await createTestUser(admin, "rls-dana");
+    const authorClient = await signedInClient(author);
+    const { data: orgId } = await authorClient.rpc("create_organization", {
+      ...ORG,
+      p_name: "Dana Co",
+    });
+    const { data: questionnaire } = await authorClient
+      .from("questionnaires")
+      .insert({ org_id: orgId as string, answers: {} })
+      .select("id")
+      .single();
+    const { error: planError } = await authorClient.from("ir_plans").insert({
+      org_id: orgId as string,
+      questionnaire_id: questionnaire!.id,
+      version: 1,
+      sections: SECTIONS,
+      created_by: author.id,
+      status: "approved",
+      approved_by_name: "Dana Owner",
+      approved_at: new Date().toISOString(),
+    });
+    expect(planError).toBeNull();
+
+    // The foreign key nulls created_by on the approved row; that must be allowed.
+    await expect(deleteTestUser(admin, author.id)).resolves.toBeUndefined();
+    const { data: orgs } = await admin.from("organizations").select("id").eq("id", orgId!);
+    expect(orgs).toEqual([]);
+  });
+
   it("deleting the owner removes the organization and everything in it", async () => {
     const { data, error } = await bobClient.rpc("create_organization", {
       ...ORG,
