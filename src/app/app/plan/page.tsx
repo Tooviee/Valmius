@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { ApprovePlanForm } from "@/components/plan/approve-plan-form";
 import { GeneratePlanForm } from "@/components/plan/generate-plan-form";
 import { PlanEditor } from "@/components/plan/plan-editor";
 import { VersionNav } from "@/components/plan/version-nav";
@@ -119,6 +120,14 @@ export default async function PlanPage({
       </div>
 
       <PlanEditor key={plan.id} planId={plan.id} sections={plan.sections} readOnly={approved} />
+
+      {!approved && (
+        <ApprovePlanForm
+          planId={plan.id}
+          version={plan.version}
+          approverHint={loaded?.facts.review.approver ?? "the plan approver"}
+        />
+      )}
 
       {loaded && (
         <Card className="bg-muted/40">

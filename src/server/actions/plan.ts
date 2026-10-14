@@ -20,13 +20,19 @@ import {
 import type { Json } from "@/lib/supabase/database.types";
 import { logEvent } from "@/lib/supabase/events";
 import { createClient } from "@/lib/supabase/server";
-import type { GeneratePlanState, RegenerateSectionState, SavePlanState } from "./types";
+import type {
+  ApprovePlanState,
+  GeneratePlanState,
+  RegenerateSectionState,
+  SavePlanState,
+} from "./types";
 
 // Sections are written in parallel; five at a time stays well under the workspace
 // request limit (SPEC.md section 14) even with two founders generating at once.
 const SECTION_CONCURRENCY = 5;
 const UNIQUE_VIOLATION = "23505";
 const MAX_SECTIONS_JSON_BYTES = 400_000;
+const APPROVER_NAME_MAX_LENGTH = 120;
 
 async function requireContext(): Promise<OrgContext> {
   const context = await getOrgContext();
@@ -202,4 +208,58 @@ export async function savePlanVersionAction(
     context.org.id,
   );
   redirect(`/app/plan?v=${saved.version}`);
+}
+
+/**
+ * Approves a draft version (SPEC.md section 7, Phase 2): records who approved it and
+ * when, and freezes it. Template sections must be dealt with first, since an approved
+ * plan is what auditors and insurers will read.
+ */
+export async function approvePlanAction(
+  _previous: ApprovePlanState,
+  formData: FormData,
+): Promise<ApprovePlanState> {
+  const planId = formData.get("planId");
+  const rawName = formData.get("approvedByName");
+  const approvedByName = typeof rawName === "string" ? rawName.trim() : "";
+  if (
+    typeof planId !== "string" ||
+    !approvedByName ||
+    approvedByName.length > APPROVER_NAME_MAX_LENGTH
+  ) {
+    return { status: "invalid" };
+  }
+
+  const context = await requireContext();
+  const supabase = await createClient();
+  const plan = await loadPlan(supabase, planId);
+  if (!plan) return { status: "invalid" };
+  if (plan.status === "approved") return { status: "already_approved" };
+  if (plan.sections.some((section) => section.origin === "template")) {
+    return { status: "needs_review" };
+  }
+
+  const { data, error } = await supabase
+    .from("ir_plans")
+    .update({
+      status: "approved",
+      approved_by_name: approvedByName,
+      approved_at: new Date().toISOString(),
+    })
+    .eq("id", plan.id)
+    .eq("status", "draft")
+    .select("version")
+    .maybeSingle();
+  if (error || !data) {
+    console.error("[plan] approve failed:", error?.message ?? "no row updated");
+    return { status: "error" };
+  }
+
+  await logEvent(
+    "plan_approved",
+    { version: data.version },
+    getIpHash(await headers()),
+    context.org.id,
+  );
+  redirect(`/app/plan?v=${data.version}`);
 }

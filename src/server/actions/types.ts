@@ -68,3 +68,7 @@ export type RegenerateSectionState =
   | { status: "ok"; section: PlanSection };
 
 export type SavePlanState = { status: "idle" | "invalid" | "error" };
+
+export type ApprovePlanState = {
+  status: "idle" | "invalid" | "needs_review" | "already_approved" | "error";
+};
