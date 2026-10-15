@@ -1,5 +1,6 @@
 import type { PackScenarioType } from "@/lib/schemas/scenario";
 import planSectionFixtures from "../../../../tests/fixtures/llm/plan-sections.json";
+import reportFixture from "../../../../tests/fixtures/llm/report.json";
 import becFixture from "../../../../tests/fixtures/llm/scenario-bec.json";
 import cloudCredentialFixture from "../../../../tests/fixtures/llm/scenario-cloud-credential.json";
 import ransomwareFixture from "../../../../tests/fixtures/llm/scenario-ransomware.json";
@@ -21,6 +22,8 @@ function fixtureFor(task: LlmRequest["task"]): unknown {
       return SCENARIO_FIXTURES[task.scenarioType];
     case "plan_section":
       return PLAN_SECTION_FIXTURES[task.sectionId];
+    case "report":
+      return reportFixture;
   }
 }
 

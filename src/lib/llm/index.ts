@@ -1,15 +1,23 @@
 import "server-only";
 import type { PlanFacts } from "@/lib/plan/facts";
 import type { GeneratorInput } from "@/lib/schemas/generator";
+import type { ReportFacts } from "@/lib/report/build";
 import type { PlanSectionId } from "@/lib/schemas/plan";
 import { generatePlanSectionWith, templateSectionResult } from "./generate-plan-section";
+import { generateReportWith, templateReportResult } from "./generate-report";
 import { generateScenarioWith, seededScenarioResult } from "./generate-scenario";
-import type { GeneratePlanSectionResult, GenerateScenarioResult, LlmProvider } from "./types";
+import type {
+  GeneratePlanSectionResult,
+  GenerateReportResult,
+  GenerateScenarioResult,
+  LlmProvider,
+} from "./types";
 
 export { seededScenarioResult } from "./generate-scenario";
 export type {
   FallbackReason,
   GeneratePlanSectionResult,
+  GenerateReportResult,
   GenerateScenarioResult,
   LlmCallMeta,
 } from "./types";
@@ -62,4 +70,11 @@ export async function generatePlanSection(
   const provider = await resolveProvider();
   if (!provider) return templateSectionResult(facts, sectionId, "config_error");
   return generatePlanSectionWith(provider, facts, sectionId);
+}
+
+/** Writes the narrative sections of an after-action report from the exercise facts. */
+export async function generateReport(facts: ReportFacts): Promise<GenerateReportResult> {
+  const provider = await resolveProvider();
+  if (!provider) return templateReportResult(facts, "config_error");
+  return generateReportWith(provider, facts);
 }
