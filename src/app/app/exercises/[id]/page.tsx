@@ -58,6 +58,11 @@ export default async function ExercisePage({ params }: { params: Promise<{ id: s
               {SCENARIO_TYPE_LABELS[exercise.scenario.type]}: {scenario.title}
               {exercise.scenario.is_pack ? "" : " (generated from your plan)"}
             </span>
+            <span data-testid="exercise-plan">
+              {exercise.plan
+                ? `· Tests plan v${exercise.plan.version} (${exercise.plan.status})`
+                : "· No plan version attached"}
+            </span>
             {exercise.scheduled_at && (
               <span>· Scheduled {formatDateTime(exercise.scheduled_at, org.timezone)}</span>
             )}
@@ -193,6 +198,39 @@ export default async function ExercisePage({ params }: { params: Promise<{ id: s
         <div className="space-y-2 rounded-xl border p-5">
           <h2 className="text-base font-semibold">Scenario</h2>
           <p className="text-sm text-muted-foreground">{scenario.summary}</p>
+          <details className="text-sm" data-testid="full-scenario">
+            <summary className="cursor-pointer text-muted-foreground">
+              Read the full scenario (facilitator only)
+            </summary>
+            <div className="mt-3 space-y-4">
+              <p>
+                <span className="font-medium">Company:</span> {scenario.setting.company_profile}
+              </p>
+              <p>
+                <span className="font-medium">When:</span> {scenario.setting.day_and_time}
+              </p>
+              <p>
+                <span className="font-medium">First sign:</span> {scenario.setting.initial_signal}
+              </p>
+              <ol className="space-y-3">
+                {scenario.injects.map((inject, index) => (
+                  <li key={index} className="rounded-lg border p-3">
+                    <p className="text-xs font-semibold text-muted-foreground uppercase">
+                      Inject {index + 1} ·{" "}
+                      {inject.offset_minutes === 0 ? "Start" : `+${inject.offset_minutes} min`}
+                    </p>
+                    <p className="font-medium">{inject.title}</p>
+                    <p className="text-muted-foreground">{inject.narrative}</p>
+                    <ul className="mt-2 list-disc pl-5">
+                      {inject.questions.map((q) => (
+                        <li key={q}>{q}</li>
+                      ))}
+                    </ul>
+                  </li>
+                ))}
+              </ol>
+            </div>
+          </details>
           <p className="text-sm text-muted-foreground">
             {scenario.injects.length} injects, about {scenario.estimated_duration_minutes} minutes.
           </p>
