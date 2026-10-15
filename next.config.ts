@@ -30,7 +30,7 @@ const nextConfig: NextConfig = {
   // Development only: lets a phone on the same Wi-Fi open the dev server (for example
   // http://jeonghuns-laptop.local:3000 or the Mac's 10.x / 192.168.x address) with its
   // scripts and hot reload working. Production never uses this.
-  allowedDevOrigins: ["*.local", "10.*.*.*", "192.168.*.*"],
+  allowedDevOrigins: ["*.local", "10.*.*.*", "192.168.*.*", "172.*.*.*", "100.*.*.*"],
   async headers() {
     return [{ source: "/(.*)", headers: securityHeaders }];
   },
