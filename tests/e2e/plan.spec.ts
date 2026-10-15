@@ -195,5 +195,5 @@ test("a founder sets up their org, answers the questionnaire, then generates, ap
 test("a signed-out visitor is sent to the sign-in page", async ({ page }) => {
   await page.goto("/app/plan");
   await expect(page).toHaveURL(/\/login\?next=%2Fapp%2Fplan$/);
-  await expect(page.getByRole("heading", { name: "Sign in to Drill Day" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Sign in to Valmius" })).toBeVisible();
 });

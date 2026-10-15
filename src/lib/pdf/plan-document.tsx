@@ -238,10 +238,10 @@ export function PlanDocument({ input }: { input: PlanExportInput }) {
   const { plan, orgName, timeZone } = input;
   const title = toPdfText(`${orgName}: Incident Response Plan`);
   return (
-    <Document title={title} author="Drill Day" subject="Incident response plan">
+    <Document title={title} author="Valmius" subject="Incident response plan">
       <Page size="LETTER" style={styles.page}>
         <View style={styles.brandRow} fixed>
-          <Text style={styles.brand}>Drill Day</Text>
+          <Text style={styles.brand}>Valmius</Text>
           <Text style={styles.brandNote}>
             {toPdfText(`Incident response plan, version ${plan.version}`)}
           </Text>

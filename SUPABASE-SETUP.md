@@ -1,4 +1,4 @@
-# Supabase setup for Drill Day (October 2026)
+# Supabase setup for Valmius (October 2026; the Supabase project keeps its internal name `drillday`)
 
 ## 1. Create the project
 
@@ -68,7 +68,7 @@ The dashboard only lets you edit the Magic Link and Confirm signup templates aft
 - **Custom template (after custom SMTP, before outsiders sign in).** Authentication > Emails, open **Magic Link** and **Confirm signup**, and replace the `<a href="...">` with:
 
   ```html
-  <a href="{{ .RedirectTo }}?token_hash={{ .TokenHash }}&type=email">Sign in to Drill Day</a>
+  <a href="{{ .RedirectTo }}?token_hash={{ .TokenHash }}&type=email">Sign in to Valmius</a>
   ```
 
   This link carries a one-time token hash that `/auth/confirm` verifies directly, so it works from any browser or device, including a phone that never visited the site. `{{ .RedirectTo }}` is the `/auth/confirm` URL the app sends; `type=email` lets one handler confirm first-time and returning addresses.

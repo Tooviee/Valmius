@@ -1,6 +1,6 @@
 import { createHash, timingSafeEqual } from "node:crypto";
 
-export const ADMIN_REALM = "Drill Day admin";
+export const ADMIN_REALM = "Valmius admin";
 
 /** Compares two strings in constant time, whatever their lengths. */
 function secretsMatch(supplied: string, expected: string): boolean {

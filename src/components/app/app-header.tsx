@@ -22,7 +22,7 @@ export function AppHeader({ email, orgName }: { email: string | null; orgName: s
             >
               D
             </span>
-            Drill Day
+            Valmius
           </Link>
           {orgName && (
             <nav aria-label="App" className="hidden items-center gap-4 text-sm sm:flex">

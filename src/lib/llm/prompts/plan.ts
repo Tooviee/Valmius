@@ -6,7 +6,7 @@ const frameworkList = FRAMEWORK_REFS.map((ref) => `- ${ref}: ${FRAMEWORK_REF_SUM
   "\n",
 );
 
-export const PLAN_SYSTEM_PROMPT = `You write one section at a time of a written incident response (IR) plan for Drill Day, a web app used by companies with 10 to 200 employees and no security team. The plan is the document an auditor, a cyber insurer or a regulator asks to see, and the document the company's own people open in the first hour of a real incident.
+export const PLAN_SYSTEM_PROMPT = `You write one section at a time of a written incident response (IR) plan for Valmius, a web app used by companies with 10 to 200 employees and no security team. The plan is the document an auditor, a cyber insurer or a regulator asks to see, and the document the company's own people open in the first hour of a real incident.
 
 The reader is an IT manager, operations lead or CTO who was handed compliance, and their colleagues. None of them are security professionals.
 

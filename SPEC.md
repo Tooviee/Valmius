@@ -1,4 +1,4 @@
-# SPEC.md: IR Plan + Tabletop Exercise Generator (product name: Drill Day; slug `drillday`)
+# SPEC.md: IR Plan + Tabletop Exercise Generator (product name: Valmius; internal codename and slug `drillday`)
 
 Version 0.1, October 2026. This is the product spec Claude Code builds from. Build one phase at a time. Do not start a phase until the previous phase's verification steps pass.
 
@@ -216,7 +216,7 @@ Cover (org, exercise title, date, duration, facilitator, plan version tested); p
 
 ### 9.1 What we actually cover (positioning, and the source for landing-page copy)
 
-Drill Day covers a small, mandatory slice of each framework: roughly 2 to 9% of controls depending on how a framework counts. That is the intended size for a one-pain-point product. Never claim more on the landing page or in sales conversations; auditors and consultants will know.
+Valmius covers a small, mandatory slice of each framework: roughly 2 to 9% of controls depending on how a framework counts. That is the intended size for a one-pain-point product. Never claim more on the landing page or in sales conversations; auditors and consultants will know.
 
 | Framework | Total controls (how counted) | Covered directly | Supported | Share |
 |---|---|---|---|---|
@@ -267,7 +267,7 @@ Sources: [AWS Prescriptive Guidance, CMMC Level 2 on AWS](https://docs.aws.amazo
 
 ## 13. Open questions for the founder (answer before Phase 2)
 
-1. Product name: decided, **Drill Day** (display name with the space; `drillday` as the package, repo and code slug; "Drill Day" in UI copy and PDF headers). Domain: not registered yet as of 2026-10-14 (check `drillday.com` before settling for a variant such as `mydrillday.com`); the order of domain, mailbox and email-sending steps is in section 14, "Domain and email". Use `NEXT_PUBLIC_SITE_URL` everywhere a URL is needed rather than hardcoding one.
+1. Product name: **Valmius**, decided 2026-10-15 (it replaced the working name Drill Day). Valmius is the display name in UI copy, PDF and Word headers, prompts and emails. `drillday` stays as the internal v0 codename: the package name, repo folder, Supabase project, Anthropic key names, migrations and the `e2e.drillday.test` test domain are never customer-facing and are not renamed. Domain: not registered yet (check `valmius.com` first); the order of domain, mailbox and email-sending steps is in section 14, "Domain and email". Use `NEXT_PUBLIC_SITE_URL` everywhere a URL is needed rather than hardcoding one.
 2. Google sign-in at launch, or magic link only? Decided 2026-10-13: magic link only. Google is deferred; adding it needs a Google Cloud OAuth client, the provider keys in Supabase and an `/auth/callback` route.
 3. Pricing page in Phase 1 (price anchors shown) or hide pricing until validation data is in?
 4. Will you run the first real exercise with a friendly company? If yes, which industry, so the first scenario pack variants target it.
@@ -282,9 +282,9 @@ Standing reminders (repeat whenever the trigger comes up in conversation, not on
 - **Auto-reload goes on at public launch.** Whenever the founder mentions deploying, launching, sharing the generator link, or going public, remind them to turn on auto-reload (first item below) if it is still off.
 
 Domain and email, in this order (none of it is needed for local development or the Phase 2 manual check, which works with the address you log in to Supabase with):
-- [ ] **Register the domain.** Check `drillday.com` first, then variants. Buy from a registrar that sells at cost (Cloudflare Registrar or Porkbun) and keep DNS at Cloudflare, so email routing, the sending provider's records and the Vercel records all live in one place. Record the domain in section 13, question 1.
-- [ ] **Mailbox for people.** Start with free forwarding: Cloudflare Email Routing forwards `support@` and a founder address to the existing Gmail, and Gmail can send as that address. Move to Google Workspace only when real inboxes are worth the per-user fee. Keep the Supabase, Anthropic and Vercel accounts on the current address; add the Drill Day address as a team member later instead of migrating.
-- [ ] **Custom SMTP, before anyone outside the Supabase team signs in.** Supabase's built-in mailer delivers only to team members, a few messages an hour. Create a Resend account, add the domain and publish the DNS records it gives (SPF, DKIM, DMARC), then paste Resend's SMTP host, port, user and password into Authentication > Emails > SMTP Settings with sender `Drill Day <login@yourdomain>` and a reply-to of the support mailbox. Raise the email limit under Authentication > Rate Limits. Test by signing in from an address that is not on the Supabase team. The same Resend account carries the Phase 5 reminder emails.
+- [ ] **Register the domain.** Check `valmius.com` first, then variants. Buy from a registrar that sells at cost (Cloudflare Registrar or Porkbun) and keep DNS at Cloudflare, so email routing, the sending provider's records and the Vercel records all live in one place. Record the domain in section 13, question 1.
+- [ ] **Mailbox for people.** Start with free forwarding: Cloudflare Email Routing forwards `support@` and a founder address to the existing Gmail, and Gmail can send as that address. Move to Google Workspace only when real inboxes are worth the per-user fee. Keep the Supabase, Anthropic and Vercel accounts on the current address; add the Valmius address as a team member later instead of migrating.
+- [ ] **Custom SMTP, before anyone outside the Supabase team signs in.** Supabase's built-in mailer delivers only to team members, a few messages an hour. Create a Resend account, add the domain and publish the DNS records it gives (SPF, DKIM, DMARC), then paste Resend's SMTP host, port, user and password into Authentication > Emails > SMTP Settings with sender `Valmius <login@yourdomain>` and a reply-to of the support mailbox. Raise the email limit under Authentication > Rate Limits. Test by signing in from an address that is not on the Supabase team. The same Resend account carries the Phase 5 reminder emails.
 - [ ] **Sign-in email templates, right after custom SMTP.** The dashboard locks template editing until custom SMTP exists. Then, in Authentication > Emails, point the Magic Link and Confirm signup templates at `/auth/confirm` with the token hash (SUPABASE-SETUP.md section 5b), so links work from any device. Until then the app accepts Supabase's default link, which only works in the browser that requested it; that covers the manual check.
 - [ ] **Domain at deploy.** Add the domain to the Vercel project, set `NEXT_PUBLIC_SITE_URL` to it, and set the Supabase Site URL and redirect URL (see the launch list below).
 

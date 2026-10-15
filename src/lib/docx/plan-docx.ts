@@ -242,7 +242,7 @@ export function buildPlanDocument(input: PlanExportInput): Document {
   });
 
   return new Document({
-    creator: "Drill Day",
+    creator: "Valmius",
     title: `${orgName}: Incident Response Plan v${plan.version}`,
     styles: {
       default: {

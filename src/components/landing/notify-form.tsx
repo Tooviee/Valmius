@@ -22,7 +22,7 @@ export function NotifyForm() {
   if (state.status === "ok") {
     return (
       <p role="status" className="font-medium">
-        Thanks. We will email you when Drill Day launches.
+        Thanks. We will email you when Valmius launches.
       </p>
     );
   }

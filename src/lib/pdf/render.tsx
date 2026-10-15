@@ -19,5 +19,5 @@ export async function renderScenarioPdf(
 }
 
 export function scenarioPdfFilename(scenario: Scenario): string {
-  return `drill-day-${scenario.type.replaceAll("_", "-")}-scenario.pdf`;
+  return `valmius-${scenario.type.replaceAll("_", "-")}-scenario.pdf`;
 }

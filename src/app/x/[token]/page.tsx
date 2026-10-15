@@ -28,7 +28,7 @@ export default async function ParticipantPage({ params }: { params: Promise<{ to
             >
               D
             </span>
-            Drill Day
+            Valmius
           </Link>
         </div>
       </header>

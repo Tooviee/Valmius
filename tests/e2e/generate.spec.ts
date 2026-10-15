@@ -46,7 +46,7 @@ test("a visitor generates a scenario, leaves an email and downloads the PDF", as
   await page.getByRole("button", { name: "Download PDF" }).click();
 
   const download = await downloadPromise;
-  expect(download.suggestedFilename()).toBe("drill-day-ransomware-scenario.pdf");
+  expect(download.suggestedFilename()).toBe("valmius-ransomware-scenario.pdf");
   const file = readFileSync((await download.path()) as string);
   expect(file.subarray(0, 5).toString("latin1")).toBe("%PDF-");
   expect(file.length).toBeGreaterThan(5_000);
@@ -112,7 +112,7 @@ test("the landing page captures a launch signup", async ({ page }) => {
   const email = `landing-${Date.now()}@${E2E_EMAIL_DOMAIN}`;
   await page.getByLabel("Work email").fill(email);
   await page.getByRole("button", { name: "Notify me", exact: true }).click();
-  await expect(page.getByText("Thanks. We will email you when Drill Day launches.")).toBeVisible();
+  await expect(page.getByText("Thanks. We will email you when Valmius launches.")).toBeVisible();
 
   const { data: lead } = await supabase.from("leads").select("source").eq("email", email).single();
   expect(lead).toEqual({ source: "landing" });

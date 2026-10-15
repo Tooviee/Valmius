@@ -1,5 +1,5 @@
 /**
- * The control IDs Drill Day evidences directly (SPEC.md section 9.1, "Covered directly").
+ * The control IDs Valmius evidences directly (SPEC.md section 9.1, "Covered directly").
  * Scenario content may reference these and nothing broader.
  */
 export const FRAMEWORK_REFS = [

@@ -1,6 +1,8 @@
 @AGENTS.md
 
-# Drill Day
+# Valmius (internal codename `drillday`)
+
+The product is Valmius; `drillday` stays as the slug in the package, repo, Supabase project, key names and test domain. Customer-facing text says Valmius only.
 
 SPEC.md is the source of truth; update it when a decision changes. SPEC.md section 14 holds founder
 reminders (spend cap, auto-reload, launch checklist): raise them whenever their triggers come up.

@@ -11,7 +11,7 @@ export function SiteHeader() {
           >
             D
           </span>
-          Drill Day
+          Valmius
         </Link>
         <nav className="flex items-center gap-5 text-sm">
           <Link

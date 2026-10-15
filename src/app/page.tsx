@@ -5,7 +5,7 @@ import { SiteHeader } from "@/components/site-header";
 import { buttonVariants } from "@/components/ui/button";
 
 // Copy follows SPEC.md section 9.1: name the exact control IDs we evidence, nothing broader,
-// and never claim that Drill Day makes a company compliant.
+// and never claim that Valmius makes a company compliant.
 const DRIVERS = [
   {
     id: "PCI DSS 12.10.2",
@@ -61,7 +61,7 @@ export default function HomePage() {
               Write your incident response plan, practice it, and keep the dated proof.
             </h1>
             <p className="text-lg leading-relaxed text-muted-foreground">
-              Drill Day is for companies with 10 to 200 employees and nobody whose full-time job is
+              Valmius is for companies with 10 to 200 employees and nobody whose full-time job is
               security. It writes the plan, runs the tabletop exercise with your team, and produces
               the after-action report that auditors, insurers and regulators ask for.
             </p>
@@ -125,7 +125,7 @@ export default function HomePage() {
           <div className="mx-auto w-full max-w-5xl px-6 py-16">
             <h2 className="text-2xl font-semibold tracking-tight">What we cover, exactly</h2>
             <p className="mt-2 max-w-2xl text-muted-foreground">
-              Drill Day produces the evidence auditors ask for under these controls, and nothing
+              Valmius produces the evidence auditors ask for under these controls, and nothing
               broader. It does not make a company compliant; no single tool does.
             </p>
             <ul className="mt-8 grid gap-3 sm:grid-cols-2">

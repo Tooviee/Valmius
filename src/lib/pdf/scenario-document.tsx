@@ -175,7 +175,7 @@ function WriteLines({ count }: { count: number }) {
 function BrandRow({ note }: { note: string }) {
   return (
     <View style={styles.brandRow} fixed>
-      <Text style={styles.brand}>Drill Day</Text>
+      <Text style={styles.brand}>Valmius</Text>
       <Text style={styles.brandNote}>{note}</Text>
     </View>
   );
@@ -185,7 +185,7 @@ function Footer({ siteUrl, generatedOn }: { siteUrl: string; generatedOn: string
   return (
     <>
       <Text style={styles.footerLeft} fixed>
-        {`Drill Day | ${siteUrl} | Generated ${generatedOn} (UTC)`}
+        {`Valmius | ${siteUrl} | Generated ${generatedOn} (UTC)`}
       </Text>
       <Text
         style={styles.footerRight}
@@ -217,11 +217,7 @@ export function ScenarioDocument({ scenario, generatedOn, siteUrl }: ScenarioDoc
   const title = toPdfText(scenario.title);
 
   return (
-    <Document
-      title={`${title} - Drill Day`}
-      author="Drill Day"
-      subject="Tabletop exercise scenario"
-    >
+    <Document title={`${title} - Valmius`} author="Valmius" subject="Tabletop exercise scenario">
       <Page size="LETTER" style={styles.page}>
         <BrandRow note="Tabletop exercise scenario" />
         <Footer siteUrl={siteUrl} generatedOn={generatedOn} />

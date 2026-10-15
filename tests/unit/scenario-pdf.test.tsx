@@ -30,7 +30,7 @@ describe("scenario PDF", () => {
 
   it("names the download after the scenario type", () => {
     expect(scenarioPdfFilename({ ...fixture, type: "cloud_credential" })).toBe(
-      "drill-day-cloud-credential-scenario.pdf",
+      "valmius-cloud-credential-scenario.pdf",
     );
   });
 });

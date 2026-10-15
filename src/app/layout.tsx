@@ -17,8 +17,8 @@ const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
   title: {
-    default: "Drill Day: incident response tabletop exercises for small teams",
-    template: "%s | Drill Day",
+    default: "Valmius: incident response tabletop exercises for small teams",
+    template: "%s | Valmius",
   },
   description:
     "Write an incident response plan, practice it with a tabletop exercise, and keep the dated evidence auditors and insurers ask for.",
