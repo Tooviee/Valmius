@@ -137,6 +137,8 @@ Verify: unit tests for report schema and hash; Playwright: finalize a report, do
 
 Stripe annual plans ($600 to $1,200 per org, consultant tier), Resend email reminders at 11 months and 30 days before audit date, Vanta and Drata evidence push, consultant multi-org and white-label, SSO.
 
+Small follow-ups queued from Phase 3, not needed for the MVP: a QR code next to each participant link on the exercise page, so people in the room scan the facilitator's screen instead of receiving a link; and an option to reuse an existing org-owned scenario when creating a new exercise, so an exercise ended by mistake can be rerun without generating again.
+
 ## 8. Content specifications
 
 ### 8.1 Questionnaire (15 questions)
