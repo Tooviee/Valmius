@@ -1,5 +1,6 @@
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { generateParticipantToken } from "@/lib/exercise/token";
 import type { Database } from "@/lib/supabase/database.types";
 import { createTestUser, deleteTestUser, type TestUser } from "../helpers/auth-users";
 import { loadSupabaseTestEnv } from "../helpers/env";
@@ -14,7 +15,7 @@ const anon = createClient<Database>(env.supabaseUrl, env.publishableKey, options
 
 const PERMISSION_DENIED = "42501";
 const CHECK_VIOLATION = "23514";
-const TOKEN = "a".repeat(43);
+const TOKEN = generateParticipantToken();
 
 type UserClient = SupabaseClient<Database>;
 
@@ -116,7 +117,12 @@ describe("exercise lifecycle and the decision-log lock", () => {
     expect((await bobClient.from("exercise_participants").select("id")).data).toEqual([]);
     const intruder = await bobClient
       .from("exercise_participants")
-      .insert({ exercise_id: exerciseId, name: "Mallory", role: "x", token: "b".repeat(43) });
+      .insert({
+        exercise_id: exerciseId,
+        name: "Mallory",
+        role: "x",
+        token: generateParticipantToken(),
+      });
     expect(intruder.error?.code).toBe(PERMISSION_DENIED);
   });
 
@@ -161,14 +167,12 @@ describe("exercise lifecycle and the decision-log lock", () => {
     expect(fixed.error).toBeNull();
     expect(fixed.data?.logged_at).toBe(data!.logged_at);
 
-    const finding = await aliceClient
-      .from("findings")
-      .insert({
-        exercise_id: exerciseId,
-        kind: "gap",
-        description: "No restore test.",
-        severity: "high",
-      });
+    const finding = await aliceClient.from("findings").insert({
+      exercise_id: exerciseId,
+      kind: "gap",
+      description: "No restore test.",
+      severity: "high",
+    });
     expect(finding.error).toBeNull();
   });
 
@@ -193,14 +197,12 @@ describe("exercise lifecycle and the decision-log lock", () => {
     const remove = await aliceClient.from("decision_log").delete().eq("id", decisionId);
     expect(remove.error?.code).toBe(CHECK_VIOLATION);
 
-    const debrief = await aliceClient
-      .from("findings")
-      .insert({
-        exercise_id: exerciseId,
-        kind: "action_item",
-        description: "Schedule a restore test.",
-        owner_name: "IT Manager",
-      });
+    const debrief = await aliceClient.from("findings").insert({
+      exercise_id: exerciseId,
+      kind: "action_item",
+      description: "Schedule a restore test.",
+      owner_name: "IT Manager",
+    });
     expect(debrief.error).toBeNull();
   });
 
