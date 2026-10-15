@@ -25,7 +25,12 @@ export type EventName =
   | "finding_added"
   | "exercise_ended"
   | "participant_attended"
-  | "participant_signed_off";
+  | "participant_signed_off"
+  | "report_generated"
+  | "report_finalized"
+  | "report_amended"
+  | "report_downloaded"
+  | "evidence_exported";
 
 export type EventProperties = { [key: string]: Json | undefined };
 

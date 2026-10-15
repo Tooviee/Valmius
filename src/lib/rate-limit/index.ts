@@ -20,6 +20,8 @@ export const RATE_LIMITS = {
   plan_section: { prefix: "psec", limit: 30, windowSeconds: 3600 },
   // Scenarios generated from the plan for an exercise, per organization.
   scenario_custom: { prefix: "scus", limit: 10, windowSeconds: 3600 },
+  // After-action report narratives, per organization.
+  report_generate: { prefix: "rep", limit: 10, windowSeconds: 3600 },
   // Participant actions (attendance, sign-off) per IP: tokens are unguessable, this just
   // keeps a misbehaving client from hammering the lookup.
   participant: { prefix: "part", limit: 120, windowSeconds: 3600 },

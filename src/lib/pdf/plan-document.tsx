@@ -6,7 +6,7 @@ import { toPdfInline, toPdfText } from "./text";
 const colors = { text: "#171717", muted: "#525252", line: "#c4c4c4", fill: "#f4f4f5" };
 const lineHeight = (fontSize: number) => `${(fontSize * 1.45).toFixed(1)}pt`;
 
-const styles = StyleSheet.create({
+export const pdfStyles = StyleSheet.create({
   page: {
     paddingTop: 50,
     paddingBottom: 62,
@@ -103,18 +103,18 @@ const styles = StyleSheet.create({
   },
 });
 
-function Runs({ runs }: { runs: InlineRun[] }) {
+export function Runs({ runs }: { runs: InlineRun[] }) {
   return (
     <>
       {runs.map((run, index) => {
         const style = run.code
-          ? styles.code
+          ? pdfStyles.code
           : run.bold && run.italic
-            ? styles.boldItalic
+            ? pdfStyles.boldItalic
             : run.bold
-              ? styles.bold
+              ? pdfStyles.bold
               : run.italic
-                ? styles.italic
+                ? pdfStyles.italic
                 : undefined;
         return (
           <Text key={index} style={style}>
@@ -128,13 +128,13 @@ function Runs({ runs }: { runs: InlineRun[] }) {
 
 function ListBlock({ block, depth }: { block: Extract<Block, { type: "list" }>; depth: number }) {
   return (
-    <View style={depth > 0 ? styles.nested : undefined}>
+    <View style={depth > 0 ? pdfStyles.nested : undefined}>
       {block.items.map((item, index) => (
-        <View key={index} style={styles.listItem}>
-          <Text style={styles.listMarker}>{block.ordered ? `${index + 1}.` : "-"}</Text>
-          <View style={styles.listBody}>
+        <View key={index} style={pdfStyles.listItem}>
+          <Text style={pdfStyles.listMarker}>{block.ordered ? `${index + 1}.` : "-"}</Text>
+          <View style={pdfStyles.listBody}>
             {item.runs.length > 0 && (
-              <Text style={styles.listText}>
+              <Text style={pdfStyles.listText}>
                 <Runs runs={item.runs} />
               </Text>
             )}
@@ -150,14 +150,14 @@ function ListBlock({ block, depth }: { block: Extract<Block, { type: "list" }>; 
 
 function TableBlock({ block }: { block: Extract<Block, { type: "table" }> }) {
   const renderRow = (cells: InlineRun[][], rowIndex: number, header: boolean) => (
-    <View key={rowIndex} style={styles.row} wrap={false}>
+    <View key={rowIndex} style={pdfStyles.row} wrap={false}>
       {cells.map((cell, cellIndex) => (
         <Text
           key={cellIndex}
           style={[
-            styles.cell,
-            cellIndex === 0 ? styles.firstCell : {},
-            header ? styles.headerCell : {},
+            pdfStyles.cell,
+            cellIndex === 0 ? pdfStyles.firstCell : {},
+            header ? pdfStyles.headerCell : {},
           ]}
         >
           <Runs runs={cell} />
@@ -166,14 +166,14 @@ function TableBlock({ block }: { block: Extract<Block, { type: "table" }> }) {
     </View>
   );
   return (
-    <View style={styles.table}>
+    <View style={pdfStyles.table}>
       {block.header.length > 0 && renderRow(block.header, -1, true)}
       {block.rows.map((row, index) => renderRow(row, index, false))}
     </View>
   );
 }
 
-function Blocks({ blocks, depth = 0 }: { blocks: Block[]; depth?: number }) {
+export function Blocks({ blocks, depth = 0 }: { blocks: Block[]; depth?: number }) {
   return (
     <>
       {blocks.map((block, index) => {
@@ -182,7 +182,7 @@ function Blocks({ blocks, depth = 0 }: { blocks: Block[]; depth?: number }) {
             return (
               <Text
                 key={index}
-                style={block.level <= 3 ? styles.h3 : styles.h4}
+                style={block.level <= 3 ? pdfStyles.h3 : pdfStyles.h4}
                 minPresenceAhead={40}
               >
                 <Runs runs={block.runs} />
@@ -190,7 +190,7 @@ function Blocks({ blocks, depth = 0 }: { blocks: Block[]; depth?: number }) {
             );
           case "paragraph":
             return (
-              <Text key={index} style={styles.paragraph}>
+              <Text key={index} style={pdfStyles.paragraph}>
                 <Runs runs={block.runs} />
               </Text>
             );
@@ -200,18 +200,18 @@ function Blocks({ blocks, depth = 0 }: { blocks: Block[]; depth?: number }) {
             return <TableBlock key={index} block={block} />;
           case "quote":
             return (
-              <View key={index} style={styles.quote}>
+              <View key={index} style={pdfStyles.quote}>
                 <Blocks blocks={block.blocks} depth={depth} />
               </View>
             );
           case "code":
             return (
-              <Text key={index} style={styles.codeBlock}>
+              <Text key={index} style={pdfStyles.codeBlock}>
                 {toPdfText(block.text)}
               </Text>
             );
           case "rule":
-            return <View key={index} style={styles.rule} />;
+            return <View key={index} style={pdfStyles.rule} />;
         }
       })}
     </>
@@ -221,11 +221,11 @@ function Blocks({ blocks, depth = 0 }: { blocks: Block[]; depth?: number }) {
 function Footer({ input }: { input: PlanExportInput }) {
   return (
     <>
-      <Text style={styles.footerLeft} fixed>
+      <Text style={pdfStyles.footerLeft} fixed>
         {toPdfText(footerLine(input))}
       </Text>
       <Text
-        style={styles.footerRight}
+        style={pdfStyles.footerRight}
         render={({ pageNumber, totalPages }) => `Page ${pageNumber} of ${totalPages}`}
         fixed
       />
@@ -239,33 +239,33 @@ export function PlanDocument({ input }: { input: PlanExportInput }) {
   const title = toPdfText(`${orgName}: Incident Response Plan`);
   return (
     <Document title={title} author="Valmius" subject="Incident response plan">
-      <Page size="LETTER" style={styles.page}>
-        <View style={styles.brandRow} fixed>
-          <Text style={styles.brand}>Valmius</Text>
-          <Text style={styles.brandNote}>
+      <Page size="LETTER" style={pdfStyles.page}>
+        <View style={pdfStyles.brandRow} fixed>
+          <Text style={pdfStyles.brand}>Valmius</Text>
+          <Text style={pdfStyles.brandNote}>
             {toPdfText(`Incident response plan, version ${plan.version}`)}
           </Text>
         </View>
         <Footer input={input} />
 
-        <Text style={styles.title}>{title}</Text>
-        <Text style={styles.subtitle}>{toPdfText(`Version ${plan.version}`)}</Text>
-        <Text style={styles.meta}>{toPdfText(approvalLine(input))}</Text>
-        <Text style={styles.meta}>
+        <Text style={pdfStyles.title}>{title}</Text>
+        <Text style={pdfStyles.subtitle}>{toPdfText(`Version ${plan.version}`)}</Text>
+        <Text style={pdfStyles.meta}>{toPdfText(approvalLine(input))}</Text>
+        <Text style={pdfStyles.meta}>
           {toPdfText(
             `Version created ${formatPlanDate(plan.created_at, timeZone)}; exported ${formatPlanDate(input.generatedAt, timeZone)}`,
           )}
         </Text>
         {plan.status !== "approved" && (
-          <Text style={styles.draftBanner}>
+          <Text style={pdfStyles.draftBanner}>
             DRAFT. This version has not been approved. It is not the plan in force.
           </Text>
         )}
 
-        <View style={styles.toc}>
-          <Text style={styles.h3}>Contents</Text>
+        <View style={pdfStyles.toc}>
+          <Text style={pdfStyles.h3}>Contents</Text>
           {plan.sections.map((section, index) => (
-            <Text key={section.id} style={styles.tocItem}>
+            <Text key={section.id} style={pdfStyles.tocItem}>
               {toPdfText(`${index + 1}. ${section.title}`)}
             </Text>
           ))}
@@ -273,11 +273,11 @@ export function PlanDocument({ input }: { input: PlanExportInput }) {
 
         {plan.sections.map((section, index) => (
           <View key={section.id}>
-            <Text style={styles.h2} minPresenceAhead={60}>
+            <Text style={pdfStyles.h2} minPresenceAhead={60}>
               {toPdfText(`${index + 1}. ${section.title}`)}
             </Text>
             {section.framework_refs.length > 0 && (
-              <Text style={styles.refs}>
+              <Text style={pdfStyles.refs}>
                 {toPdfText(`Gives evidence toward: ${section.framework_refs.join(", ")}`)}
               </Text>
             )}

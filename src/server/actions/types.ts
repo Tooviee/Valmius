@@ -105,3 +105,13 @@ export type ParticipantActionState =
   | { status: "invalid_link" }
   | { status: "rate_limited" }
   | { status: "error" };
+
+export type GenerateReportState = { status: "idle" | "rate_limited" | "error" | "not_ended" };
+
+export type SaveReportState =
+  | { status: "idle" }
+  | { status: "saved"; savedAt: string }
+  | { status: "invalid"; fieldErrors: Record<string, string> }
+  | { status: "error" };
+
+export type FinalizeReportState = { status: "idle" } | { status: "error"; message: string };

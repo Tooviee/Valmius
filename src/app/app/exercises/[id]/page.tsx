@@ -107,6 +107,15 @@ export default async function ExercisePage({ params }: { params: Promise<{ id: s
               Review the log
             </Link>
           )}
+          {(exercise.status === "ended" || exercise.status === "reported") && (
+            <Link
+              href={`/app/exercises/${exercise.id}/report`}
+              className={buttonVariants({ size: "lg" })}
+              data-testid="open-report"
+            >
+              {exercise.status === "reported" ? "After-action report" : "Write the report"}
+            </Link>
+          )}
         </div>
       </div>
 
