@@ -65,18 +65,31 @@ test("a visitor generates a scenario, leaves an email and downloads the PDF", as
     scenario_type: "ransomware",
   });
 
-  // Every Phase 1 event was logged, and the generation came from the mock provider.
+  // Every Phase 1 event was logged exactly once, and the generation came from the mock
+  // provider. Signed-in tests share the test IP (and lose their org_id when their test
+  // account is deleted), so the check is limited to the Phase 1 event names.
+  const PHASE_1_EVENTS = [
+    "email_submitted",
+    "generator_viewed",
+    "pdf_downloaded",
+    "scenario_generated",
+  ];
   await expect
     .poll(async () => {
-      const { data } = await supabase.from("events").select("name").eq("ip_hash", ipHash);
+      const { data } = await supabase
+        .from("events")
+        .select("name")
+        .eq("ip_hash", ipHash)
+        .in("name", PHASE_1_EVENTS);
       return (data ?? []).map((row) => row.name).sort();
     })
-    .toEqual(["email_submitted", "generator_viewed", "pdf_downloaded", "scenario_generated"]);
+    .toEqual(PHASE_1_EVENTS);
 
   const { data: events } = await supabase
     .from("events")
     .select("name, properties")
-    .eq("ip_hash", ipHash);
+    .eq("ip_hash", ipHash)
+    .in("name", PHASE_1_EVENTS);
   const generated = events?.find((row) => row.name === "scenario_generated");
   expect(generated?.properties).toMatchObject({
     type: "ransomware",
