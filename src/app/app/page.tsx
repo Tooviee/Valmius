@@ -13,6 +13,7 @@ import {
 import { requireOrg } from "@/lib/auth/session";
 import { INDUSTRY_LABELS, type Industry } from "@/lib/schemas/generator";
 import { FRAMEWORK_LABELS, type Framework } from "@/lib/schemas/organization";
+import { dueState, nextTestDue } from "@/lib/report/due";
 import { createClient } from "@/lib/supabase/server";
 
 export const metadata: Metadata = {
@@ -170,7 +171,12 @@ export default async function DashboardPage() {
             )}
             {lastEnded?.ended_at && (
               <p className="text-sm text-muted-foreground">
-                Last run {formatDate(lastEnded.ended_at, org.timezone)}.
+                Last run {formatDate(lastEnded.ended_at, org.timezone)}. Next due{" "}
+                {formatDate(nextTestDue(lastEnded.ended_at)!.toISOString(), org.timezone)}
+                {dueState(lastEnded.ended_at) === "overdue" ? ", overdue" : ""}.{" "}
+                <Link href="/app/evidence" className="underline underline-offset-4">
+                  Evidence vault
+                </Link>
               </p>
             )}
           </CardContent>

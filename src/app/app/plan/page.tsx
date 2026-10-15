@@ -9,6 +9,7 @@ import { buttonVariants } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { requireOrg } from "@/lib/auth/session";
 import { loadPlan, loadPlanFacts, loadPlanVersions } from "@/lib/plan/load";
+import { loadEvidence } from "@/lib/report/load";
 import { createClient } from "@/lib/supabase/server";
 
 export const metadata: Metadata = {
@@ -29,11 +30,16 @@ export default async function PlanPage({
 }) {
   const { org } = await requireOrg();
   const supabase = await createClient();
-  const [versions, loaded, params] = await Promise.all([
+  const [versions, loaded, params, evidence] = await Promise.all([
     loadPlanVersions(supabase, org.id),
     loadPlanFacts(supabase, org),
     searchParams,
+    loadEvidence(supabase, org.id),
   ]);
+  const lastTested =
+    evidence.exercises.find((e) => e.ended_at && e.report) ??
+    evidence.exercises.find((e) => e.ended_at) ??
+    null;
 
   if (versions.length === 0) {
     return (
@@ -102,6 +108,26 @@ export default async function PlanPage({
             )}
           </div>
           <VersionNav versions={versions} current={plan.version} />
+          <p className="text-sm text-muted-foreground" data-testid="last-tested">
+            {lastTested?.ended_at ? (
+              <>
+                Last tested {formatDate(lastTested.ended_at, org.timezone)} ·{" "}
+                <Link
+                  href={`/app/exercises/${lastTested.id}/report`}
+                  className="underline underline-offset-4"
+                >
+                  {lastTested.report ? "after-action report" : "report not written yet"}
+                </Link>
+              </>
+            ) : (
+              <>
+                Not tested yet ·{" "}
+                <Link href="/app/exercises/new" className="underline underline-offset-4">
+                  plan an exercise
+                </Link>
+              </>
+            )}
+          </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <a
