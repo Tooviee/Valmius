@@ -27,7 +27,7 @@ export default async function DashboardPage() {
   const { org } = await requireOrg();
   const supabase = await createClient();
 
-  const [questionnaire, latestPlan, approvedPlan] = await Promise.all([
+  const [questionnaire, latestPlan, approvedPlan, exercises] = await Promise.all([
     supabase
       .from("questionnaires")
       .select("id, completed_at, updated_at")
@@ -50,12 +50,22 @@ export default async function DashboardPage() {
       .order("version", { ascending: false })
       .limit(1)
       .maybeSingle(),
+    supabase
+      .from("exercises")
+      .select("id, status, ended_at")
+      .eq("org_id", org.id)
+      .order("created_at", { ascending: false }),
   ]);
-  for (const result of [questionnaire, latestPlan, approvedPlan]) {
+  for (const result of [questionnaire, latestPlan, approvedPlan, exercises]) {
     if (result.error) throw new Error(`Could not load the dashboard: ${result.error.message}`);
   }
 
   const questionnaireDone = Boolean(questionnaire.data?.completed_at);
+  const exerciseRows = exercises.data ?? [];
+  const liveExercise = exerciseRows.find((e) => e.status === "live");
+  const lastEnded = exerciseRows
+    .filter((e) => e.ended_at)
+    .sort((a, b) => String(b.ended_at).localeCompare(String(a.ended_at)))[0];
   const frameworks = (org.frameworks as Framework[]).map((f) => FRAMEWORK_LABELS[f] ?? f);
 
   return (
@@ -69,7 +79,7 @@ export default async function DashboardPage() {
         </p>
       </div>
 
-      <div className="grid gap-6 md:grid-cols-2">
+      <div className="grid gap-6 md:grid-cols-3">
         <Card data-testid="questionnaire-card">
           <CardHeader>
             <CardTitle>1. Questionnaire</CardTitle>
@@ -136,6 +146,49 @@ export default async function DashboardPage() {
               <Button size="sm" disabled>
                 Complete the questionnaire first
               </Button>
+            )}
+          </CardFooter>
+        </Card>
+
+        <Card data-testid="exercises-card">
+          <CardHeader>
+            <CardTitle>3. Tabletop exercises</CardTitle>
+            <CardDescription>
+              Run the plan as a fire drill: a scenario, a timer, a decision log and sign-offs, for
+              the dated evidence auditors ask for.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            {liveExercise ? (
+              <Badge>Live now</Badge>
+            ) : exerciseRows.length > 0 ? (
+              <Badge variant="secondary">
+                {exerciseRows.length} {exerciseRows.length === 1 ? "exercise" : "exercises"}
+              </Badge>
+            ) : (
+              <Badge variant="outline">None yet</Badge>
+            )}
+            {lastEnded?.ended_at && (
+              <p className="text-sm text-muted-foreground">
+                Last run {formatDate(lastEnded.ended_at, org.timezone)}.
+              </p>
+            )}
+          </CardContent>
+          <CardFooter>
+            {liveExercise ? (
+              <Link
+                href={`/app/exercises/${liveExercise.id}/run`}
+                className={buttonVariants({ size: "sm" })}
+              >
+                Open the console
+              </Link>
+            ) : (
+              <Link
+                href={exerciseRows.length > 0 ? "/app/exercises" : "/app/exercises/new"}
+                className={buttonVariants({ size: "sm" })}
+              >
+                {exerciseRows.length > 0 ? "See exercises" : "Plan an exercise"}
+              </Link>
             )}
           </CardFooter>
         </Card>

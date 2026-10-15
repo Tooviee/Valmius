@@ -6,6 +6,7 @@ const NAV = [
   { href: "/app", label: "Dashboard" },
   { href: "/app/questionnaire", label: "Questionnaire" },
   { href: "/app/plan", label: "IR plan" },
+  { href: "/app/exercises", label: "Exercises" },
 ] as const;
 
 /** The signed-in shell's header: brand, app navigation (once an org exists) and sign-out. */

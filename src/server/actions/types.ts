@@ -72,3 +72,19 @@ export type SavePlanState = { status: "idle" | "invalid" | "error" };
 export type ApprovePlanState = {
   status: "idle" | "invalid" | "needs_review" | "already_approved" | "error";
 };
+
+export type CreateExerciseValues = {
+  title: string;
+  scheduledAt: string;
+  sourceKind: "pack" | "generate";
+  packId: string;
+  scenarioType: string;
+  focus: string;
+  participants: { name: string; email: string; role: string }[];
+};
+
+export type CreateExerciseState =
+  | { status: "idle" }
+  | { status: "invalid"; values: CreateExerciseValues; fieldErrors: Record<string, string> }
+  | { status: "rate_limited"; values: CreateExerciseValues }
+  | { status: "error"; values: CreateExerciseValues; message?: string };

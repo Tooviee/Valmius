@@ -2,7 +2,7 @@ import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Organization } from "@/lib/auth/session";
 import { planSectionsSchema, type PlanSections } from "@/lib/schemas/plan";
-import { questionnaireAnswersSchema } from "@/lib/schemas/questionnaire";
+import { questionnaireAnswersSchema, type QuestionnaireAnswers } from "@/lib/schemas/questionnaire";
 import type { Database } from "@/lib/supabase/database.types";
 import { buildPlanFacts, type PlanFacts } from "./facts";
 
@@ -23,7 +23,7 @@ export type PlanRecord = PlanSummary & { questionnaire_id: string; sections: Pla
 export async function loadPlanFacts(
   supabase: Client,
   org: Organization,
-): Promise<{ facts: PlanFacts; questionnaireId: string } | null> {
+): Promise<{ facts: PlanFacts; answers: QuestionnaireAnswers; questionnaireId: string } | null> {
   const { data, error } = await supabase
     .from("questionnaires")
     .select("id, answers, completed_at")
@@ -35,7 +35,11 @@ export async function loadPlanFacts(
   if (!data?.completed_at) return null;
   const answers = questionnaireAnswersSchema.safeParse(data.answers);
   if (!answers.success) return null;
-  return { facts: buildPlanFacts(org, answers.data), questionnaireId: data.id };
+  return {
+    facts: buildPlanFacts(org, answers.data),
+    answers: answers.data,
+    questionnaireId: data.id,
+  };
 }
 
 /** Every version of the organization's plan, newest first, without the section text. */

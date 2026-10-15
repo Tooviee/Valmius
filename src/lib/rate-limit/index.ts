@@ -18,6 +18,11 @@ export const RATE_LIMITS = {
   // rewrites, so one account cannot run up the model spend.
   plan_generate: { prefix: "plan", limit: 10, windowSeconds: 3600 },
   plan_section: { prefix: "psec", limit: 30, windowSeconds: 3600 },
+  // Scenarios generated from the plan for an exercise, per organization.
+  scenario_custom: { prefix: "scus", limit: 10, windowSeconds: 3600 },
+  // Participant actions (attendance, sign-off) per IP: tokens are unguessable, this just
+  // keeps a misbehaving client from hammering the lookup.
+  participant: { prefix: "part", limit: 120, windowSeconds: 3600 },
 } as const;
 
 export type RateLimitName = keyof typeof RATE_LIMITS;

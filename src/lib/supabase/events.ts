@@ -16,7 +16,16 @@ export type EventName =
   | "plan_generated"
   | "plan_saved"
   | "plan_approved"
-  | "plan_exported";
+  | "plan_exported"
+  | "exercise_scenario_generated"
+  | "exercise_created"
+  | "exercise_started"
+  | "inject_revealed"
+  | "decision_logged"
+  | "finding_added"
+  | "exercise_ended"
+  | "participant_attended"
+  | "participant_signed_off";
 
 export type EventProperties = { [key: string]: Json | undefined };
 
