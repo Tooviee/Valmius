@@ -37,13 +37,13 @@ pnpm supabase link --project-ref <ref>   # <ref> = subdomain of your Project URL
 pnpm supabase db push                    # applies supabase/migrations/*.sql to the hosted project
 ```
 
-The migration file `supabase/migrations/20261006000001_phase1_schema.sql` creates `scenarios`, `leads`, `events`, `rate_limits`, the `bump_rate_limit()` RPC, all grants and RLS. The Phase 2 migrations (`20261014…`) add `organizations`, `org_members`, `questionnaires` and `ir_plans`, one table per file, with the `is_org_member()` / `is_org_owner()` helpers every org-scoped policy uses and the `create_organization()` RPC. Because auto-expose is off, every future migration must follow the same pattern (grant to the roles that need the table, enable RLS, add policies). The pattern is documented at the top of the Phase 1 file and in SPEC.md section 5.
+The migration file `supabase/migrations/20261006000001_phase1_schema.sql` creates `scenarios`, `leads`, `events`, `rate_limits`, the `bump_rate_limit()` RPC, all grants and RLS. The Phase 2 migrations (`20261014…`) add `organizations`, `org_members`, `questionnaires` and `ir_plans`, one table per file, with the `is_org_member()` / `is_org_owner()` helpers every org-scoped policy uses and the `create_organization()` RPC. The Phase 3 migrations (`20261015…`) add `exercises`, `exercise_participants`, `decision_log` and `findings`, the `is_exercise_member()` helper, the triggers that lock the log after an exercise ends, and member policies on org-owned `scenarios`. Because auto-expose is off, every future migration must follow the same pattern (grant to the roles that need the table, enable RLS, add policies). The pattern is documented at the top of the Phase 1 file and in SPEC.md section 5.
 
 Running Postgres locally with `pnpm supabase start` needs Docker and is optional. Pushing migrations straight to the hosted free project is fine for the MVP.
 
 ## 4. Verify in the dashboard
 
-- Table Editor: eight tables exist (four from Phase 1, four from Phase 2), each shows the RLS shield as enabled.
+- Table Editor: twelve tables exist (four from Phase 1, four from Phase 2, four from Phase 3), each shows the RLS shield as enabled.
 - Database > Advisors > Security Advisor: should report no RLS warnings for `public`.
 - SQL Editor sanity check (should return 0 rows, proving anon cannot read leads):
   ```sql

@@ -14,8 +14,9 @@ reminders (spend cap, auto-reload, launch checklist): raise them whenever their 
 
 ## Layout
 
-`src/app` routes (`/generate` public, `/login` + `/auth/confirm` auth, `/app/**` signed-in) ·
-`src/components` · `src/lib/{auth,llm,plan,markdown,pdf,docx,rate-limit,schemas,supabase}` ·
+`src/app` routes (`/generate` public, `/login` + `/auth/confirm` auth, `/app/**` signed-in,
+`/x/[token]` participant) · `src/components` ·
+`src/lib/{auth,exercise,llm,plan,markdown,pdf,docx,rate-limit,schemas,supabase}` ·
 `src/server/actions` · `src/proxy.ts` (admin basic auth + `/app` session refresh) ·
 `supabase/migrations` · `tests/{unit,integration,e2e,fixtures,helpers}` · `scripts/seed.ts`
 
@@ -33,6 +34,8 @@ reminders (spend cap, auto-reload, launch checklist): raise them whenever their 
   pushed migration, add a new one (see `20261014000005`).
 - Org data is read and written with the user's session client (`src/lib/supabase/server.ts`), so RLS
   is the access control; `getOrgContext()` / `requireOrg()` in `src/lib/auth/session.ts` give the org.
+  Participants have no session: `/x/[token]` and its actions go through the admin client after
+  validating the 43-char token (`src/lib/exercise/participant.ts`), and never return expected actions.
 - Secrets are server-only: `SUPABASE_SECRET_KEY` and `ANTHROPIC_API_KEY` never reach the browser.
   Only `src/lib/supabase/admin.ts` reads `leads`, `events` and `rate_limits`.
 - Store the salted IP hash, never the IP. Never log email addresses or visitor free text to `events`.
@@ -53,3 +56,8 @@ reminders (spend cap, auto-reload, launch checklist): raise them whenever their 
 - Base UI `Button` with `render={<Link/>}` must not claim to be a native button; the wrapper handles it.
 - `toPdfText` trims; use `toPdfInline` for runs inside a paragraph or the spaces around bold text vanish.
 - An approved `ir_plans` row is frozen by a trigger (everything except `created_by`); edits are new versions.
+- Row triggers that guard content must let two things through: bookkeeping-only updates (`created_by`
+  nulled when an account is deleted) and cascaded deletes, where the parent row is already gone when
+  the child trigger fires. See `20261015000006`; the db suite deletes users with ended exercises.
+- `Poller` only refreshes visible tabs (and on `visibilitychange`); a background tab in the Chrome tool
+  never updates, so reload it instead of waiting.
