@@ -50,8 +50,10 @@ export const HOSTING_LABELS: Record<HostingOption, string> = {
 };
 
 export const CONTEXT_MAX_LENGTH = 500;
+/** The plan facts block (Phase 3, "generate from my plan"); never set from a public form. */
+export const PLAN_CONTEXT_MAX_LENGTH = 6000;
 
-/** What the public generator form submits. */
+/** What the scenario generator takes: the public form's fields, plus plan context in Phase 3. */
 export const generatorInputSchema = z.object({
   industry: z.enum(INDUSTRIES),
   headcountBand: z.enum(HEADCOUNT_BANDS),
@@ -62,6 +64,7 @@ export const generatorInputSchema = z.object({
     .transform((values) => [...new Set(values)]),
   scenarioType: packScenarioTypeSchema,
   context: z.string().trim().max(CONTEXT_MAX_LENGTH).default(""),
+  planContext: z.string().trim().max(PLAN_CONTEXT_MAX_LENGTH).default(""),
 });
 
 export type GeneratorInput = z.infer<typeof generatorInputSchema>;
