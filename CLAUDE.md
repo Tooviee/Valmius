@@ -16,15 +16,16 @@ reminders (spend cap, auto-reload, launch checklist): raise them whenever their 
 
 ## Layout
 
-`src/app` routes (`/generate` public, `/login` + `/auth/confirm` auth, `/app/**` signed-in,
-`/x/[token]` participant) · `src/components` ·
-`src/lib/{auth,exercise,llm,plan,markdown,pdf,docx,rate-limit,schemas,supabase}` ·
+`src/app` routes (`/generate` public, `/login` + `/auth/confirm` auth, `/app/**` signed-in including
+`/app/evidence`, `/x/[token]` participant) · `src/components` ·
+`src/lib/{auth,exercise,report,llm,plan,markdown,pdf,docx,rate-limit,schemas,supabase}` ·
 `src/server/actions` · `src/proxy.ts` (admin basic auth + `/app` session refresh) ·
 `supabase/migrations` · `tests/{unit,integration,e2e,fixtures,helpers}` · `scripts/seed.ts`
 
 ## Rules
 
-- Every LLM call goes through `src/lib/llm/` (`generateScenario`, `generatePlanSection`) and every
+- Every LLM call goes through `src/lib/llm/` (`generateScenario`, `generatePlanSection`,
+  `generateReport`) and every
   response is parsed and zod-validated against `src/lib/schemas`; one retry, then a fallback (a seeded
   pack from `src/lib/llm/packs`, or a flagged template section from `src/lib/plan/templates.ts`).
   The notification matrix (plan section 7) is built in code, never by the model.
@@ -63,3 +64,6 @@ reminders (spend cap, auto-reload, launch checklist): raise them whenever their 
   the child trigger fires. See `20261015000006`; the db suite deletes users with ended exercises.
 - `Poller` only refreshes visible tabs (and on `visibilitychange`); a background tab in the Chrome tool
   never updates, so reload it instead of waiting.
+- Finalizing a report needs the private `reports` Storage bucket (SUPABASE-SETUP.md section 6); the
+  action reports its absence instead of failing silently. A PDF cannot contain its own SHA-256, so the
+  file hash lives in the vault and the PDF prints a content fingerprint instead.

@@ -89,7 +89,16 @@ Sign In / Providers > Email: enabled, "Confirm email" on (the magic link doubles
 
 ## 6. Storage (Phase 4)
 
-Create a bucket named `reports`, private (not public). The after-action PDFs go here; the app serves them through short-lived signed URLs.
+The finalized after-action PDFs live in a private bucket; the app serves them through ten-minute signed URLs after checking the user's membership. Finalize fails with a clear message until the bucket exists, and `pnpm test:e2e` needs it too.
+
+Dashboard > Storage > New bucket:
+
+1. Name: `reports` (exactly; the app looks for this name).
+2. Public bucket: leave **off**.
+3. Additional configuration (optional): restrict file size to 20 MB and allowed MIME types to `application/pdf`.
+4. Save. No policies are needed: only the server, with the secret key, reads and writes the bucket.
+
+Objects are stored as `<org id>/<exercise id>/v<version>.pdf` and are never overwritten; an amended report is a new version. Deleting an organization does not yet remove its objects (there is no delete-organization feature); when that arrives it must remove them too (SPEC.md section 11).
 
 ## 7. Things not to do
 
