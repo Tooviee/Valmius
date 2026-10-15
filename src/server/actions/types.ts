@@ -88,3 +88,20 @@ export type CreateExerciseState =
   | { status: "invalid"; values: CreateExerciseValues; fieldErrors: Record<string, string> }
   | { status: "rate_limited"; values: CreateExerciseValues }
   | { status: "error"; values: CreateExerciseValues; message?: string };
+
+export type ConsoleFormState =
+  | { status: "idle" }
+  | { status: "ok"; savedAt: string }
+  | { status: "invalid"; fieldErrors: Record<string, string> }
+  | { status: "error"; message: string };
+
+export type ParkingLotState =
+  { status: "idle" } | { status: "saved"; savedAt: string } | { status: "error" };
+
+export type ParticipantActionState =
+  | { status: "idle" }
+  | { status: "ok" }
+  | { status: "invalid"; message: string }
+  | { status: "invalid_link" }
+  | { status: "rate_limited" }
+  | { status: "error" };
