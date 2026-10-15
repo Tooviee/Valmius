@@ -481,6 +481,66 @@ export type Database = {
         }
         Relationships: []
       }
+      reports: {
+        Row: {
+          content: Json
+          created_at: string
+          created_by: string | null
+          exercise_id: string
+          finalized_at: string | null
+          generated_at: string
+          id: string
+          org_id: string
+          pdf_path: string | null
+          sha256: string | null
+          status: string
+          version: number
+        }
+        Insert: {
+          content: Json
+          created_at?: string
+          created_by?: string | null
+          exercise_id: string
+          finalized_at?: string | null
+          generated_at?: string
+          id?: string
+          org_id: string
+          pdf_path?: string | null
+          sha256?: string | null
+          status?: string
+          version: number
+        }
+        Update: {
+          content?: Json
+          created_at?: string
+          created_by?: string | null
+          exercise_id?: string
+          finalized_at?: string | null
+          generated_at?: string
+          id?: string
+          org_id?: string
+          pdf_path?: string | null
+          sha256?: string | null
+          status?: string
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reports_exercise_id_fkey"
+            columns: ["exercise_id"]
+            isOneToOne: false
+            referencedRelation: "exercises"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reports_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       scenarios: {
         Row: {
           content: Json
