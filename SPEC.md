@@ -297,6 +297,19 @@ Before the free generator goes public:
 - [ ] Supabase: production URL added to Auth redirect URLs; legacy `anon` / `service_role` JWT keys disabled under Settings > API Keys; project moved to Pro if it must stay unpaused.
 - [ ] Cloudflare Turnstile added to the generator form if abuse appears in `events`.
 
+Security hardening before customers pay (founder tasks; the code side is already in place: RLS on every table with cross-org tests, server-only keys, no regulated data collected, hashed IPs, expiring participant tokens, security headers, sanitized markdown, rate limits):
+- [ ] **MFA on the founder's accounts**: Supabase, Vercel, Anthropic Console, GitHub, and the registrar. These accounts are the easiest way into everything else.
+- [ ] **Supabase Pro with backups**: daily backups come with Pro (also stops the project pausing); add point-in-time recovery once there is customer data that could not be re-created.
+- [ ] **Database access**: enforce SSL on direct Postgres connections and restrict them to known addresses (Settings > Database); the app itself only uses the Data API. Run Database > Advisors (Security and Performance) after every migration and clear what they flag.
+- [ ] **Keys**: legacy JWT keys disabled, the secret key present only in Vercel, dev key rotated on its 90-day schedule (see the key lifetimes above).
+- [ ] **Dependencies**: Dependabot or Renovate on the repo; merge security updates weekly.
+- [ ] **`/.well-known/security.txt`** with an address for vulnerability reports and a promise to answer within a few days.
+- [ ] **Use Valmius on Valmius**: write the company's own incident response plan in the product, run a tabletop, keep the report. It is the first thing a buyer's IT manager asks about.
+- [ ] **Security page** in plain language: what is stored and for how long, how an organization is deleted, subprocessors with what each sees (Supabase on AWS us-east-1, Vercel, Anthropic), the breach-notification commitment, and Anthropic's current API data-retention and training terms quoted exactly. Keep a data processing agreement template ready for the first customer who asks.
+- [ ] **Penetration test** by an outside firm once there is revenue to protect; the report is the next thing buyers ask for after the security page.
+
+Credibility beyond the security page, in the order they pay off: a Vanta-style trust page and the CSA STAR self-assessment cost little and answer most questionnaires; a SOC 2 Type I (a point-in-time audit, achievable in weeks on a compliance platform with startup pricing) once an enterprise deal asks for it; SOC 2 Type II after 3 to 12 months of running the controls. ISO 27001 only if non-US customers demand it. HIPAA has no certificate: the evidence is a signed BAA chain and the Security Rule controls. Infrastructure certifications (Supabase, Vercel, AWS) can be cited but do not certify Valmius.
+
 Before Phase 2 (accounts) goes live:
 - [ ] Custom SMTP is live and the sign-in templates point at `/auth/confirm` (see "Domain and email" above); a sign-in from an outside address arrives within a minute.
 - [x] Spend limit raised to $50 on 2026-10-14. Go to $100 (notifications $50 and $80) once paying customers generate plans; one plan costs roughly 38,000 input and 12,000 output tokens.
