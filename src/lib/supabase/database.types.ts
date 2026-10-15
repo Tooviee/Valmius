@@ -39,6 +39,47 @@ export type Database = {
   }
   public: {
     Tables: {
+      decision_log: {
+        Row: {
+          actor_name: string
+          created_by: string | null
+          decision: string
+          exercise_id: string
+          id: string
+          inject_index: number | null
+          logged_at: string
+          notes: string
+        }
+        Insert: {
+          actor_name: string
+          created_by?: string | null
+          decision: string
+          exercise_id: string
+          id?: string
+          inject_index?: number | null
+          logged_at?: string
+          notes?: string
+        }
+        Update: {
+          actor_name?: string
+          created_by?: string | null
+          decision?: string
+          exercise_id?: string
+          id?: string
+          inject_index?: number | null
+          logged_at?: string
+          notes?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "decision_log_exercise_id_fkey"
+            columns: ["exercise_id"]
+            isOneToOne: false
+            referencedRelation: "exercises"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       events: {
         Row: {
           created_at: string
@@ -70,6 +111,170 @@ export type Database = {
             columns: ["org_id"]
             isOneToOne: false
             referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      exercise_participants: {
+        Row: {
+          attended_at: string | null
+          created_at: string
+          email: string | null
+          exercise_id: string
+          id: string
+          name: string
+          role: string
+          signature_name: string | null
+          signed_off_at: string | null
+          token: string
+        }
+        Insert: {
+          attended_at?: string | null
+          created_at?: string
+          email?: string | null
+          exercise_id: string
+          id?: string
+          name: string
+          role: string
+          signature_name?: string | null
+          signed_off_at?: string | null
+          token: string
+        }
+        Update: {
+          attended_at?: string | null
+          created_at?: string
+          email?: string | null
+          exercise_id?: string
+          id?: string
+          name?: string
+          role?: string
+          signature_name?: string | null
+          signed_off_at?: string | null
+          token?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "exercise_participants_exercise_id_fkey"
+            columns: ["exercise_id"]
+            isOneToOne: false
+            referencedRelation: "exercises"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      exercises: {
+        Row: {
+          created_at: string
+          ended_at: string | null
+          facilitator_id: string | null
+          id: string
+          ir_plan_id: string | null
+          org_id: string
+          parking_lot: string
+          reveal_times: string[]
+          revealed_count: number
+          scenario_id: string
+          scheduled_at: string | null
+          started_at: string | null
+          status: string
+          title: string
+        }
+        Insert: {
+          created_at?: string
+          ended_at?: string | null
+          facilitator_id?: string | null
+          id?: string
+          ir_plan_id?: string | null
+          org_id: string
+          parking_lot?: string
+          reveal_times?: string[]
+          revealed_count?: number
+          scenario_id: string
+          scheduled_at?: string | null
+          started_at?: string | null
+          status?: string
+          title: string
+        }
+        Update: {
+          created_at?: string
+          ended_at?: string | null
+          facilitator_id?: string | null
+          id?: string
+          ir_plan_id?: string | null
+          org_id?: string
+          parking_lot?: string
+          reveal_times?: string[]
+          revealed_count?: number
+          scenario_id?: string
+          scheduled_at?: string | null
+          started_at?: string | null
+          status?: string
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "exercises_ir_plan_id_fkey"
+            columns: ["ir_plan_id"]
+            isOneToOne: false
+            referencedRelation: "ir_plans"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "exercises_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "exercises_scenario_id_fkey"
+            columns: ["scenario_id"]
+            isOneToOne: false
+            referencedRelation: "scenarios"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      findings: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          description: string
+          due_date: string | null
+          exercise_id: string
+          id: string
+          kind: string
+          owner_name: string | null
+          severity: string | null
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          description: string
+          due_date?: string | null
+          exercise_id: string
+          id?: string
+          kind: string
+          owner_name?: string | null
+          severity?: string | null
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          description?: string
+          due_date?: string | null
+          exercise_id?: string
+          id?: string
+          kind?: string
+          owner_name?: string | null
+          severity?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "findings_exercise_id_fkey"
+            columns: ["exercise_id"]
+            isOneToOne: false
+            referencedRelation: "exercises"
             referencedColumns: ["id"]
           },
         ]
@@ -344,6 +549,7 @@ export type Database = {
           name: string
         }[]
       }
+      is_exercise_member: { Args: { p_exercise_id: string }; Returns: boolean }
       is_org_member: { Args: { p_org_id: string }; Returns: boolean }
       is_org_owner: { Args: { p_org_id: string }; Returns: boolean }
       purge_stale_rate_limits: { Args: never; Returns: undefined }
