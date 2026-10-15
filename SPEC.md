@@ -47,7 +47,7 @@ Chosen because the founder has shipped a Next.js + Supabase app before.
 
 ## 6. Data model (Postgres, Supabase)
 
-RLS rule for all org-scoped tables: a user can read/write a row only if `exists (select 1 from org_members where org_id = row.org_id and user_id = auth.uid())`. Implemented as the security-definer functions `public.is_org_member(org_id)` and `public.is_org_owner(org_id)` (migration `20261014000001`), which every org-scoped policy calls, so policies on `org_members` itself cannot recurse. Org data is read and written with the user's session client, so RLS is the access control; the service-role client stays with `leads`, `events` and `rate_limits`. Participant access to exercises goes through a signed token on the exercise participant row, checked server-side with the service role, never via RLS bypass in the client.
+RLS rule for all org-scoped tables: a user can read/write a row only if `exists (select 1 from org_members where org_id = row.org_id and user_id = auth.uid())`. Implemented as the security-definer functions `public.is_org_member(org_id)` and `public.is_org_owner(org_id)` (migration `20261014000001`), which every org-scoped policy calls, so policies on `org_members` itself cannot recurse. Org data is read and written with the user's session client, so RLS is the access control; the service-role client stays with `leads`, `events` and `rate_limits`, plus the participant page, which looks a token up without a session. Tables that hang off an exercise use `public.is_exercise_member(exercise_id)` the same way. Content-guarding triggers must let two non-edits through: `created_by` being nulled when an account is deleted, and cascaded deletes, where the parent row is already gone when the child trigger fires (migration `20261015000006`). Participant access to exercises goes through a signed token on the exercise participant row, checked server-side with the service role, never via RLS bypass in the client.
 
 ```
 organizations        id, name, industry, headcount_band, frameworks text[], timezone, created_by, created_at
@@ -59,13 +59,18 @@ ir_plans             id, org_id, questionnaire_id, version int, sections jsonb, 
                       each sections entry has id, title, markdown, framework_refs, origin)
 scenarios            id, org_id (null = public pack), type ('ransomware'|'bec'|'cloud_credential'|'vendor_breach'|'custom'),
                      title, content jsonb (see schema in 8.3), framework_tags text[], is_pack bool, created_at
-exercises            id, org_id, scenario_id, ir_plan_id, title, scheduled_at, started_at, ended_at,
-                     status ('scheduled'|'live'|'ended'|'reported'), facilitator_id, created_at
-exercise_participants id, exercise_id, name, email, role, token (unique, random 32 bytes), attended_at,
+exercises            id, org_id, scenario_id, ir_plan_id (nullable, set null if the plan version is deleted), title,
+                     scheduled_at, started_at, ended_at, status ('scheduled'|'live'|'ended'|'reported'),
+                     facilitator_id, revealed_count int, reveal_times timestamptz[], parking_lot text, created_at
+                     (status only moves forward; started_at and ended_at never change once set)
+exercise_participants id, exercise_id, name, email (optional), role, token (unique, random 32 bytes), attended_at,
                      signed_off_at, signature_name
-decision_log         id, exercise_id, inject_index int, logged_at, actor_name, decision text, notes text
+decision_log         id, exercise_id, inject_index int (null = not tied to an inject), logged_at (server clock),
+                     actor_name, decision text, notes text, created_by
+                     (a trigger allows inserts only while live and refuses every change once ended)
 findings             id, exercise_id, kind ('strength'|'gap'|'action_item'), description, severity ('low'|'medium'|'high'),
-                     owner_name, due_date, created_at
+                     owner_name, due_date, created_by, created_at
+                     (open from start through the debrief; frozen once the exercise is reported)
 reports              id, exercise_id, version int, content jsonb, pdf_path, sha256, generated_at
 leads                id, email, industry, headcount_band, scenario_type, source, created_at
 events               id, name, properties jsonb, ip_hash, org_id (nullable), created_at
@@ -109,13 +114,15 @@ Verify: unit tests for plan schema and notification-matrix builder (section 8.2 
 
 ### Phase 3: Exercise runner (facilitator console)
 
+Status: done, commits `e4b393b` to `0107a50` (2026-10-15); one real-provider scenario generated from a plan was read and verified. Decisions taken with the founder: log entries can be corrected until End exercise and are locked after it; an exercise may run against a draft plan version, with the latest approved version preferred and a warning shown for drafts.
+
 Build:
-- Create exercise: choose a scenario pack or "generate custom from my plan" (passes plan context to the model), set title and date, add participants (name, email, role). Each participant gets a token link `/x/[token]`.
+- Create exercise: choose a scenario pack or "generate from my plan", set title and date, add up to twelve participants (name, optional email, role). Each participant gets a token link `/x/[token]`, which the facilitator copies and sends by whatever channel they use, since the MVP sends no email. Generation reuses the scenario generator with a `planContext` block built from the plan facts (no separate generator or fixture), stores the result as an org-owned scenario, and is limited to 10 an hour per organization.
 - Facilitator console `/app/exercises/[id]/run`: left column scenario and current inject; center: discussion questions and a decision-log form (actor dropdown from participants plus "Team", decision text, notes); right: elapsed timer, inject list with "Reveal next inject", quick-add buttons for Strength / Gap / Action item, parking lot notes. Every log entry gets a server timestamp.
 - Participant view `/x/[token]`: confirm attendance (sets `attended_at`), shows role and the currently revealed inject and questions (poll every 5 seconds; Supabase Realtime is optional, not required), and after the exercise ends shows a sign-off form (typed name as signature, sets `signed_off_at`).
-- End exercise: status `ended`, log locked (no inserts after `ended_at`, enforced in a DB trigger).
+- End exercise: a two-step confirmation sets status `ended`; the log is locked by a DB trigger (no inserts, updates or deletes after `ended_at`), findings stay open for the debrief, and the console turns into a read-only view with the sign-off roster. Participants poll every five seconds; the console refreshes every ten.
 
-Verify: unit tests for timer math and log locking trigger (insert after end must fail); Playwright: facilitator starts exercise, reveals 3 injects, logs 3 decisions, adds a gap, ends; participant confirms attendance and signs off in a second browser context.
+Verify: unit tests for timer math and log locking trigger (insert after end must fail); Playwright: facilitator starts exercise, reveals 3 injects, logs 3 decisions, adds a gap, ends; participant confirms attendance and signs off in a second browser context. Also: a database test that corrections work while live and every change is refused after the end; an e2e test that generates the scenario from the plan with the mock provider; and the manual check, one scenario generated from the real plan with the real provider and a short exercise run with the founder as a participant on a phone.
 
 ### Phase 4: After-action report + evidence vault
 
@@ -241,7 +248,7 @@ Sources: [AWS Prescriptive Guidance, CMMC Level 2 on AWS](https://docs.aws.amazo
 ## 11. Security and privacy requirements
 
 - RLS on every table; a test proves cross-org reads fail.
-- Participant tokens are 32 random bytes, base64url, single exercise, expire 30 days after `ended_at`.
+- Participant tokens are 32 random bytes, base64url, single exercise, expire 30 days after `ended_at`. The participant page shows only the participant's own row, the revealed injects without the facilitator's expected actions, and the roster; its actions carry the token and are rate limited per IP.
 - Do not collect PHI or PAN anywhere; the questionnaire asks whether the company handles them, never for the data itself. State this in the privacy page.
 - Rate limit and size-limit every public endpoint. Validate every input with zod. Escape all markdown rendering (use a sanitizing renderer).
 - Org owner can delete the org; cascade deletes everything including Storage PDFs.
@@ -252,7 +259,7 @@ Sources: [AWS Prescriptive Guidance, CMMC Level 2 on AWS](https://docs.aws.amazo
 - Folder layout: `src/app` (routes), `src/components`, `src/lib/{supabase,llm,pdf,schemas,rate-limit}`, `src/server/actions`, `supabase/migrations`, `tests/unit`, `tests/e2e`.
 - Server actions for mutations; route handlers only for downloads and webhooks.
 - Scripts: `pnpm dev`, `pnpm typecheck`, `pnpm lint`, `pnpm test`, `pnpm test:e2e`, `pnpm build`, `pnpm db:migrate`, `pnpm db:seed`.
-- Testing: `pnpm test` and `pnpm test:e2e` force `LLM_PROVIDER=mock` (set it in the Vitest and Playwright configs, not just in `.env`). Fixtures live in `tests/fixtures/llm/` (one scenario per type, the ten plan sections, one report in Phase 4). Any test that needs the real provider's behavior stubs the SDK response; a live API call inside a test is a bug. `pnpm test:db` and `pnpm test:e2e` create and delete auth users on the reserved `@e2e.drillday.test` domain through the Auth admin API, and the e2e sign-in mints its token with `generateLink`, so no email is ever sent. Every phase's verification still includes one real-provider generation read by a person, because the mock cannot catch failures in converting an output schema to JSON schema.
+- Testing: `pnpm test` and `pnpm test:e2e` force `LLM_PROVIDER=mock` (set it in the Vitest and Playwright configs, not just in `.env`). Fixtures live in `tests/fixtures/llm/` (one scenario per type, the ten plan sections, one report in Phase 4). Any test that needs the real provider's behavior stubs the SDK response; a live API call inside a test is a bug. `pnpm test:db` and `pnpm test:e2e` create and delete auth users on the reserved `@e2e.drillday.test` domain through the Auth admin API, and the e2e sign-in mints its token with `generateLink`, so no email is ever sent. The Phase 3 e2e test drives the facilitator and a participant in two browser contexts. Signed-in e2e tests share the test IP, so Phase 1 event assertions filter by event name. Every phase's verification still includes one real-provider generation read by a person, because the mock cannot catch failures in converting an output schema to JSON schema.
 - Conventional commits; commit at the end of each numbered build item in a phase; never commit `.env.local`.
 - Keep `CLAUDE.md` short: commands, conventions, gotchas. Keep this `SPEC.md` as the source of truth; update it when a decision changes.
 
