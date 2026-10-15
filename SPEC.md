@@ -26,9 +26,9 @@ Non-goals for MVP (do not build): billing, email sending by the app itself (Supa
 Chosen because the founder has shipped a Next.js + Supabase app before.
 
 - Next.js (latest stable, App Router), TypeScript strict mode, Tailwind CSS, shadcn/ui components
-- Supabase: Postgres, Auth (magic link + Google), Storage (PDFs). Client via `@supabase/ssr`. Migrations in `supabase/migrations/`. Row Level Security on every table from day one.
-- LLM: Anthropic TypeScript SDK (`@anthropic-ai/sdk`), model `claude-sonnet-5-5` for plan and scenario generation. All LLM calls happen server-side (server actions or route handlers). Every LLM response is parsed as JSON and validated with zod; on validation failure retry once, then fall back to a seeded scenario pack. Construct the client with no explicit key (`new Anthropic()`), so credentials resolve from the environment (`ANTHROPIC_API_KEY` today); switching to Workload Identity Federation later is then a config change, not a code change (see section 14).
-- LLM access goes through one module, `src/lib/llm/`, which exports typed functions (`generateScenario`, `generatePlan`, `generateReport`) and picks its implementation from `LLM_PROVIDER`: `anthropic` (real API) or `mock` (returns fixtures from `tests/fixtures/llm/`). Vitest and Playwright always run with `LLM_PROVIDER=mock`. Only the manual check in each phase's Verify step uses the real API.
+- Supabase: Postgres, Auth (magic link; Google deferred, see section 13), Storage (PDFs). Client via `@supabase/ssr`. Migrations in `supabase/migrations/`. Row Level Security on every table from day one.
+- LLM: Anthropic TypeScript SDK (`@anthropic-ai/sdk`), model `claude-sonnet-5-5` for plan and scenario generation. All LLM calls happen server-side (server actions or route handlers). Every LLM response is parsed as JSON and validated with zod; on validation failure retry once, then fall back (a seeded scenario pack for scenarios, a flagged template section for plan sections). Output schemas are sent to the API as JSON schema for constrained output, so they carry no zod transforms; cleanup happens after parsing. Construct the client with no explicit key (`new Anthropic()`), so credentials resolve from the environment (`ANTHROPIC_API_KEY` today); switching to Workload Identity Federation later is then a config change, not a code change (see section 14).
+- LLM access goes through one module, `src/lib/llm/`, which exports typed functions (`generateScenario`, `generatePlanSection`, and `generateReport` in Phase 4) and picks its implementation from `LLM_PROVIDER`: `anthropic` (real API) or `mock` (returns fixtures from `tests/fixtures/llm/`). Vitest and Playwright always run with `LLM_PROVIDER=mock`. Only the manual check in each phase's Verify step uses the real API.
 - PDF: `@react-pdf/renderer` (runs on Vercel serverless). DOCX export via the `docx` npm package.
 - Validation: zod everywhere (forms, LLM output, route inputs).
 - Tests: Vitest for unit tests, Playwright for a smoke test per phase.
@@ -38,7 +38,7 @@ Chosen because the founder has shipped a Next.js + Supabase app before.
 
 - No secrets in client code. The Supabase secret key (`sb_secret_...`, env `SUPABASE_SECRET_KEY`) and the Anthropic key are server-only. The browser gets only `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` (`sb_publishable_...`). Do not use the legacy `anon` / `service_role` JWT keys.
 - The Supabase project was created with "Automatically expose new tables" OFF (the default since May 30, 2026). Every migration that creates a table must therefore include explicit `grant` statements for the roles that may reach it through the Data API, enable RLS, and add policies. Pattern: `grant select on public.t to anon, authenticated` only when the browser needs the table; `grant all on public.t to service_role` always; RLS enabled on every table; functions get `revoke execute ... from public, anon, authenticated` unless the browser must call them. See `supabase/migrations/20261006000001_phase1_schema.sql` for the reference pattern.
-- The public generator (Phase 1) writes only to `leads` and `events`. Rate limit it per IP (5 generations per hour) using a Postgres counter table or Upstash Redis; add Cloudflare Turnstile if abuse appears.
+- The public generator (Phase 1) writes only to `leads` and `events`. Rate limit it per IP (5 generations per hour) using a Postgres counter table or Upstash Redis; add Cloudflare Turnstile if abuse appears. Signed-in actions that spend model tokens are limited per organization through the same counter (10 plan generations and 30 section rewrites an hour).
 - Cap LLM input sizes (free text fields max 1,000 chars) and set `max_tokens` on every call. Log token usage per call to `events` (in mock mode log `model: "mock"` and zero tokens so the pipeline is exercised).
 - Tests never spend money: no test may call the real Anthropic API. The mock provider must return fixtures that pass the same zod schemas the real provider is validated against, so a schema change breaks the fixtures and the tests together.
 - Pre-generate and store 3 variants of each of the 4 scenario packs so the free generator can serve a seeded scenario with light personalization instead of a full LLM call when traffic spikes or the API fails.
@@ -47,14 +47,16 @@ Chosen because the founder has shipped a Next.js + Supabase app before.
 
 ## 6. Data model (Postgres, Supabase)
 
-RLS rule for all org-scoped tables: a user can read/write a row only if `exists (select 1 from org_members where org_id = row.org_id and user_id = auth.uid())`. Participant access to exercises goes through a signed token on the exercise participant row, checked server-side with the service role, never via RLS bypass in the client.
+RLS rule for all org-scoped tables: a user can read/write a row only if `exists (select 1 from org_members where org_id = row.org_id and user_id = auth.uid())`. Implemented as the security-definer functions `public.is_org_member(org_id)` and `public.is_org_owner(org_id)` (migration `20261014000001`), which every org-scoped policy calls, so policies on `org_members` itself cannot recurse. Org data is read and written with the user's session client, so RLS is the access control; the service-role client stays with `leads`, `events` and `rate_limits`. Participant access to exercises goes through a signed token on the exercise participant row, checked server-side with the service role, never via RLS bypass in the client.
 
 ```
 organizations        id, name, industry, headcount_band, frameworks text[], timezone, created_by, created_at
 org_members          org_id, user_id, role ('owner'|'member'), created_at
-questionnaires       id, org_id, answers jsonb, completed_at, created_at
+questionnaires       id, org_id, answers jsonb, completed_at, created_by, created_at, updated_at
 ir_plans             id, org_id, questionnaire_id, version int, sections jsonb, status ('draft'|'approved'),
-                     approved_by_name, approved_at, created_at
+                     approved_by_name, approved_at, created_by, created_at
+                     (unique on org_id + version; a trigger freezes an approved row except created_by;
+                      each sections entry has id, title, markdown, framework_refs, origin)
 scenarios            id, org_id (null = public pack), type ('ransomware'|'bec'|'cloud_credential'|'vendor_breach'|'custom'),
                      title, content jsonb (see schema in 8.3), framework_tags text[], is_pack bool, created_at
 exercises            id, org_id, scenario_id, ir_plan_id, title, scheduled_at, started_at, ended_at,
@@ -74,6 +76,8 @@ rate_limits          key (ip_hash + window), count, window_start
 
 ### Phase 1: Public scenario generator + landing page (lead magnet and demand test)
 
+Status: done, verification including the real-provider manual check passed 2026-10-13.
+
 Build:
 - `/` landing page: one-sentence pitch, who it is for, the four compliance drivers (PCI DSS 12.10.2, SOC 2 CC7.4, insurer questionnaires, NYDFS 500.16), CTA to the generator, email capture for "notify me when the full product launches". Copy follows section 9.1: name the exact control IDs we evidence, use the positioning line, never claim "makes you compliant".
 - `/generate`: form with industry (select), headcount band (select), hosting (multi-select: AWS, GCP, Azure, Vercel/Netlify, on-prem, SaaS only), scenario type (4 options), optional context (text, max 500 chars). Submit calls a server action that builds the prompt, calls the model, validates against the scenario zod schema, and renders the scenario: title, summary, roles, objectives, injects as a vertical timeline with discussion questions, wrap-up questions, estimated duration.
@@ -92,14 +96,16 @@ Verify (all automated tests run with `LLM_PROVIDER=mock`; the Playwright config 
 
 ### Phase 2: Accounts, organizations, IR plan generator
 
-Build:
-- Supabase Auth (magic link + Google). On first login, create org (name, industry, headcount, frameworks, timezone).
-- Questionnaire: the 15 questions in section 8.1, multi-step, autosaved to `questionnaires.answers`.
-- "Generate plan": server action produces `ir_plans.sections` (section 8.2 outline) as JSON, each section with `title`, `markdown`, `framework_refs`. Show the plan with a per-section markdown editor and "regenerate this section". Save creates a new version.
-- Approve plan: records `approved_by_name` and `approved_at`, status `approved`.
-- Export plan as PDF and DOCX, including a version/approval footer on each page.
+Status: done, commits `849203e` to `a32be8a`; the founder's manual check with the real provider passed 2026-10-14.
 
-Verify: unit tests for plan schema and notification-matrix builder (section 8.2 item 7); Playwright: sign in with a test user, complete questionnaire with fixture answers, generate plan, see 11 sections, export PDF. RLS test: a second test user cannot read the first user's org rows (test with two Supabase clients).
+Build:
+- Supabase Auth, magic link only (Google deferred, section 13). The emailed link lands on `/auth/confirm`, which accepts both Supabase's default link (a code, same browser only) and the token-hash link from customized templates. On first login, create org (name, industry, headcount, frameworks, timezone) through the `create_organization()` RPC, one org per account in the MVP.
+- Questionnaire: the 15 questions in section 8.1 in five steps. Step 1 edits the `organizations` row (question 1 and the framework list of question 2); everything else is autosaved to `questionnaires.answers` 1.5 s after a change and again on each step, with a loose schema for drafts and a strict one for completion.
+- "Generate plan": a server action builds one deterministic facts object from the organization and the answers (roles with backups, severity ladder, systems, obligations, notification matrix), then writes the ten model sections of the section 8.2 outline as separate calls, five at a time; section 7 is built in code from the matrix. Each call validates, retries once, then falls back to a template section flagged `origin: "template"`. Sections carry `id`, `title`, `markdown`, `framework_refs`, `origin`. The plan page has a per-section markdown editor with a sanitized preview and "regenerate this section"; save creates a new version, nothing is overwritten.
+- Approve plan: records `approved_by_name` and `approved_at`, status `approved`; the version is frozen by a database trigger and shown read-only, and a version with template sections cannot be approved.
+- Export plan as PDF and DOCX, including a version/approval footer on each page. One remark-based block model feeds both renderers; the route handlers live under `/app/plan/[id]/export/` and read the plan with the user's session.
+
+Verify: unit tests for plan schema and notification-matrix builder (section 8.2 item 7); Playwright: sign in with a test user (token minted through the Auth admin API, no email), complete questionnaire with fixture answers, generate plan, see 11 sections, edit, approve, export PDF and DOCX. RLS test: a second test user cannot read the first user's org rows (test with two Supabase clients). Manual check: one plan generated with `LLM_PROVIDER=anthropic` and read by the founder; this is what caught the output-schema bug the mock could not.
 
 ### Phase 3: Exercise runner (facilitator console)
 
@@ -127,6 +133,8 @@ Stripe annual plans ($600 to $1,200 per org, consultant tier), Resend email remi
 ## 8. Content specifications
 
 ### 8.1 Questionnaire (15 questions)
+
+Question 1 and the framework list of question 2 are columns on `organizations`, edited through questionnaire step 1. Every other answer is a key in `questionnaires.answers`, validated by `src/lib/schemas/questionnaire.ts`.
 
 1. Company name, industry, headcount band (1-10, 11-50, 51-200, 201+), timezone.
 2. Compliance obligations (multi): SOC 2, PCI DSS, HIPAA, ISO 27001, CMMC / NIST 800-171, NYDFS 500, cyber insurance only, none yet. Next audit or renewal date (optional).
@@ -225,9 +233,9 @@ Sources: [AWS Prescriptive Guidance, CMMC Level 2 on AWS](https://docs.aws.amazo
 
 ## 10. LLM prompting approach
 
-- One system prompt per generator (scenario, plan, report) stored in `src/lib/llm/prompts/*.ts`, with the JSON schema described in the prompt and enforced by zod after the call.
+- One system prompt per generator (scenario, plan, report) stored in `src/lib/llm/prompts/*.ts`, with the JSON schema described in the prompt and enforced by zod after the call. The plan is written one section per call from a shared facts block, so roles, systems and deadlines stay consistent across sections; the notification matrix (plan section 7) is built in code, never by the model.
 - Style rules in every prompt: write for a non-security reader, name the company's actual systems from the questionnaire, no generic filler, every inject must force a decision, every plan section must be actionable in the first hour of an incident.
-- Temperature low (0.3) for plans and reports, moderate (0.7) for scenarios.
+- `claude-sonnet-5-5` rejects `temperature`; thinking is always on and `effort` is the control (`low` for scenarios and plan sections).
 - Record `model`, `input_tokens`, `output_tokens`, `latency_ms`, `fallback_used` in `events` for every call.
 
 ## 11. Security and privacy requirements
@@ -244,14 +252,14 @@ Sources: [AWS Prescriptive Guidance, CMMC Level 2 on AWS](https://docs.aws.amazo
 - Folder layout: `src/app` (routes), `src/components`, `src/lib/{supabase,llm,pdf,schemas,rate-limit}`, `src/server/actions`, `supabase/migrations`, `tests/unit`, `tests/e2e`.
 - Server actions for mutations; route handlers only for downloads and webhooks.
 - Scripts: `pnpm dev`, `pnpm typecheck`, `pnpm lint`, `pnpm test`, `pnpm test:e2e`, `pnpm build`, `pnpm db:migrate`, `pnpm db:seed`.
-- Testing: `pnpm test` and `pnpm test:e2e` force `LLM_PROVIDER=mock` (set it in the Vitest and Playwright configs, not just in `.env`). Fixtures live in `tests/fixtures/llm/` (one scenario per type, one plan, one report). Any test that needs the real provider's behavior stubs the SDK response; a live API call inside a test is a bug.
+- Testing: `pnpm test` and `pnpm test:e2e` force `LLM_PROVIDER=mock` (set it in the Vitest and Playwright configs, not just in `.env`). Fixtures live in `tests/fixtures/llm/` (one scenario per type, the ten plan sections, one report in Phase 4). Any test that needs the real provider's behavior stubs the SDK response; a live API call inside a test is a bug. `pnpm test:db` and `pnpm test:e2e` create and delete auth users on the reserved `@e2e.drillday.test` domain through the Auth admin API, and the e2e sign-in mints its token with `generateLink`, so no email is ever sent. Every phase's verification still includes one real-provider generation read by a person, because the mock cannot catch failures in converting an output schema to JSON schema.
 - Conventional commits; commit at the end of each numbered build item in a phase; never commit `.env.local`.
 - Keep `CLAUDE.md` short: commands, conventions, gotchas. Keep this `SPEC.md` as the source of truth; update it when a decision changes.
 
 ## 13. Open questions for the founder (answer before Phase 2)
 
 1. Product name: decided, **Drill Day** (display name with the space; `drillday` as the package, repo and code slug; "Drill Day" in UI copy and PDF headers). Domain: not registered yet as of 2026-10-14 (check `drillday.com` before settling for a variant such as `mydrillday.com`); the order of domain, mailbox and email-sending steps is in section 14, "Domain and email". Use `NEXT_PUBLIC_SITE_URL` everywhere a URL is needed rather than hardcoding one.
-2. Google sign-in at launch, or magic link only?
+2. Google sign-in at launch, or magic link only? Decided 2026-10-13: magic link only. Google is deferred; adding it needs a Google Cloud OAuth client, the provider keys in Supabase and an `/auth/callback` route.
 3. Pricing page in Phase 1 (price anchors shown) or hide pricing until validation data is in?
 4. Will you run the first real exercise with a friendly company? If yes, which industry, so the first scenario pack variants target it.
 5. Hosting region for Supabase (US East default).
@@ -272,17 +280,17 @@ Domain and email, in this order (none of it is needed for local development or t
 - [ ] **Domain at deploy.** Add the domain to the Vercel project, set `NEXT_PUBLIC_SITE_URL` to it, and set the Supabase Site URL and redirect URL (see the launch list below).
 
 Before the free generator goes public:
-- [ ] **Turn on Anthropic auto-reload.** Console > Settings > Billing > Auto-reload > Edit. Trigger: balance below $10. Reload: $25. It stays off during development on purpose (running out of prepaid credits is a cheap, recoverable stop while learning the burn rate); once strangers use the generator, a stalled API is a broken product.
-- [ ] Workspace spend limit is set ($25/month for Phase 1) with email notifications at $12.50 (50%) and $20 (80%). If the cap is raised later, move both notification amounts up with it (see standing reminders above).
-- [ ] Workspace rate limits: Sonnet 5.5 requests capped at 20/min; unused models (Opus 5.5, Fable, Opus 5) set to the lowest value the dialog allows.
-- [ ] A separate `drillday-prod` API key exists for Vercel; the dev key stays on the laptop only. Key lifetimes: dev key is a personal key with a 90-day custom expiration; prod key is a service account key (not tied to the founder's user) with a 1-year expiration. Anthropic emails 7 days before expiry; on that email, create the replacement, deploy it, confirm requests succeed, delete the old key. Expiration cannot be changed after creation, so a lapsed key means a new key, not an extension.
+- [x] **Turn on Anthropic auto-reload.** (On as of 2026-10-13.) Console > Settings > Billing > Auto-reload > Edit. Trigger: balance below $10. Reload: $25. It stays off during development on purpose (running out of prepaid credits is a cheap, recoverable stop while learning the burn rate); once strangers use the generator, a stalled API is a broken product.
+- [x] Workspace spend limit is set: $50/month since 2026-10-14 (up from the $25 Phase 1 cap) with email notifications at $25 (50%) and $40 (80%). If the cap is raised later, move both notification amounts up with it (see standing reminders above).
+- [x] Workspace rate limits (set 2026-10-14): Sonnet 5.5 requests capped at 20/min; unused models (Opus 5.5, Fable, Opus 5) set to the lowest value the dialog allows.
+- [x] A separate `drillday-prod` API key exists for Vercel; the dev key stays on the laptop only. Key lifetimes: dev key is a personal key with a 90-day custom expiration; prod key is a service account key (not tied to the founder's user) with a 1-year expiration. Anthropic emails 7 days before expiry; on that email, create the replacement, deploy it, confirm requests succeed, delete the old key. Expiration cannot be changed after creation, so a lapsed key means a new key, not an extension.
 - [ ] Vercel env vars set server-side only: `ANTHROPIC_API_KEY`, `SUPABASE_SECRET_KEY`, `ADMIN_PASSWORD`, `IP_HASH_SALT`; `LLM_PROVIDER=anthropic`.
 - [ ] Supabase: production URL added to Auth redirect URLs; legacy `anon` / `service_role` JWT keys disabled under Settings > API Keys; project moved to Pro if it must stay unpaused.
 - [ ] Cloudflare Turnstile added to the generator form if abuse appears in `events`.
 
 Before Phase 2 (accounts) goes live:
 - [ ] Custom SMTP is live and the sign-in templates point at `/auth/confirm` (see "Domain and email" above); a sign-in from an outside address arrives within a minute.
-- [ ] Raise the spend limit to $50 to $100 and move the notification amounts to 50% and 80% of the new cap.
+- [x] Spend limit raised to $50 on 2026-10-14. Go to $100 (notifications $50 and $80) once paying customers generate plans; one plan costs roughly 38,000 input and 12,000 output tokens.
 - [ ] Privacy page states that no health data or card numbers are collected.
 
 Deferred until the platform supports it:
