@@ -71,7 +71,10 @@ decision_log         id, exercise_id, inject_index int (null = not tied to an in
 findings             id, exercise_id, kind ('strength'|'gap'|'action_item'), description, severity ('low'|'medium'|'high'),
                      owner_name, due_date, created_by, created_at
                      (open from start through the debrief; frozen once the exercise is reported)
-reports              id, exercise_id, version int, content jsonb, pdf_path, sha256, generated_at
+reports              id, exercise_id, org_id, version int, status ('draft'|'final'), content jsonb (facts snapshot
+                     plus the five narrative sections), pdf_path, sha256 (of the PDF file), generated_at, finalized_at,
+                     created_by, created_at (unique on exercise_id + version; a trigger makes a final row immutable
+                     and undeletable while its exercise exists; amended reports are new versions)
 leads                id, email, industry, headcount_band, scenario_type, source, created_at
 events               id, name, properties jsonb, ip_hash, org_id (nullable), created_at
 rate_limits          key (ip_hash + window), count, window_start
@@ -126,12 +129,14 @@ Verify: unit tests for timer math and log locking trigger (insert after end must
 
 ### Phase 4: After-action report + evidence vault
 
-Build:
-- "Generate report": server action sends scenario, decision log, findings and attendance to the model, asks for structured JSON (section 8.4 outline), facilitator edits, then "Finalize" renders the PDF, stores it in Supabase Storage, computes SHA-256 of the PDF and saves `reports` row. Exercise status `reported`.
-- Evidence vault `/app/evidence`: table of exercises (date, scenario, participants, status, PDF link, hash), the approved plan version, and "next test due" per framework (12 months after the last ended exercise). Export CSV.
-- Plan page shows "last tested on" and links to the report.
+Status: done, commits `34c8157` to `3754d75` (2026-10-16); the founder's manual check with the real provider passed 2026-10-17. Decisions taken with the founder: a finalized report may be amended, with the earlier final kept on file and marked superseded; a report may be finalized while attendees have not signed off, and it says so.
 
-Verify: unit tests for report schema and hash; Playwright: finalize a report, download PDF, hash in the UI matches `sha256sum` of the downloaded file; vault shows next-due date.
+Build:
+- "Generate report": the factual sections (cover, roster with attendance and sign-off, injects used, the server-stamped decision timeline, findings, control mapping) are assembled in code from the exercise record; the model writes only five narrative sections (executive summary, what went well, gap analysis, action plan, closing) as JSON through `generateReport`, validated, retried once, then a flagged template. The facilitator edits the narrative and can regenerate it. "Finalize" re-snapshots the facts, renders the PDF (section 8.4 order), stores it in the private `reports` bucket at `<org>/<exercise>/v<n>.pdf`, computes the file's SHA-256, freezes the row and sets the exercise to `reported`, which freezes its findings. Downloads check membership with the session and redirect to a ten-minute signed URL. Generation is limited to 10 an hour per organization.
+- Evidence vault `/app/evidence`: table of exercises (date, scenario, participants, status, plan version, PDF link, hash), the approved plan version, and "next test due" per framework (12 months after the last ended exercise, flagged on schedule, due within 60 days, overdue, or never tested). Export CSV.
+- Plan page shows "last tested on" and links to the report; the dashboard shows the next due date.
+
+Verify: unit tests for report schema and hash; Playwright: finalize a report, download PDF, hash in the UI matches `sha256sum` of the downloaded file; vault shows next-due date. Also: a database test that final reports are immutable and reported exercises freeze findings; an e2e amendment test; and the manual check, one report generated with the real provider on a real exercise and read by the founder.
 
 ### Phase 5 (later, not in MVP)
 
@@ -200,7 +205,7 @@ Scenario packs to seed (3 variants each): **Ransomware** (file server or SaaS ba
 
 ### 8.4 After-action report outline
 
-Cover (org, exercise title, date, duration, facilitator, plan version tested); participants with roles, attendance and sign-off status; scenario summary and injects used; decision timeline (timestamp, inject, actor, decision); strengths observed; gaps with severity; action items with owner and due date; control mapping showing which requirements this exercise evidences (section 9); attestation block with report SHA-256 and generation timestamp.
+Cover (org, exercise title, date, duration, facilitator, plan version tested); participants with roles, attendance and sign-off status; scenario summary and injects used; decision timeline (timestamp, inject, actor, decision); strengths observed; gaps with severity; action items with owner and due date; control mapping showing which requirements this exercise evidences (section 9); attestation block with the report id, version, generation timestamp and a SHA-256 fingerprint of the report content. The PDF file's own SHA-256 cannot be printed inside the file it hashes, so it is stored on the `reports` row and shown in the evidence vault and beside the download; the attestation says so.
 
 ## 9. Compliance mapping (tag content with these)
 
@@ -253,7 +258,7 @@ Sources: [AWS Prescriptive Guidance, CMMC Level 2 on AWS](https://docs.aws.amazo
 - Participant tokens are 32 random bytes, base64url, single exercise, expire 30 days after `ended_at`. The participant page shows only the participant's own row, the revealed injects without the facilitator's expected actions, and the roster; its actions carry the token and are rate limited per IP.
 - Do not collect PHI or PAN anywhere; the questionnaire asks whether the company handles them, never for the data itself. State this in the privacy page.
 - Rate limit and size-limit every public endpoint. Validate every input with zod. Escape all markdown rendering (use a sanitizing renderer).
-- Org owner can delete the org; cascade deletes everything including Storage PDFs.
+- Org owner can delete the org; cascade deletes everything including Storage PDFs. There is no delete-organization feature yet; the database cascade exists, but Storage objects are not removed by it, so the feature must delete `reports/<org id>/` objects explicitly.
 - Security headers (CSP, HSTS, X-Frame-Options) via `next.config` headers.
 
 ## 12. Engineering conventions
@@ -266,6 +271,8 @@ Sources: [AWS Prescriptive Guidance, CMMC Level 2 on AWS](https://docs.aws.amazo
 - Keep `CLAUDE.md` short: commands, conventions, gotchas. Keep this `SPEC.md` as the source of truth; update it when a decision changes.
 
 ## 13. Open questions for the founder (answer before Phase 2)
+
+Status 2026-10-17: Phases 1 to 4 are built and checked; the questions below are answered or superseded. What remains before customers is the launch checklist in section 14, plus the design and accessibility pass the founder asked for after Phase 4 (not a SPEC phase yet; plan it against measurable targets such as WCAG 2.2 AA and an axe-clean e2e run).
 
 1. Product name: **Valmius**, decided 2026-10-15 (it replaced the working name Drill Day). Valmius is the display name in UI copy, PDF and Word headers, prompts and emails. `drillday` stays as the internal v0 codename: the package name, repo folder, Supabase project, Anthropic key names, migrations and the `e2e.drillday.test` test domain are never customer-facing and are not renamed. Domain: not registered yet (check `valmius.com` first); the order of domain, mailbox and email-sending steps is in section 14, "Domain and email". Use `NEXT_PUBLIC_SITE_URL` everywhere a URL is needed rather than hardcoding one.
 2. Google sign-in at launch, or magic link only? Decided 2026-10-13: magic link only. Google is deferred; adding it needs a Google Cloud OAuth client, the provider keys in Supabase and an `/auth/callback` route.
