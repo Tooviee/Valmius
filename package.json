@@ -19,7 +19,8 @@
     "test:e2e": "playwright test",
     "db:migrate": "dotenv -e .env.local -- supabase db push",
     "db:types": "dotenv -e .env.local -- supabase gen types typescript --linked > src/lib/supabase/database.types.ts",
-    "db:seed": "tsx --env-file=.env.local scripts/seed.ts"
+    "db:seed": "tsx --env-file=.env.local scripts/seed.ts",
+    "screenshots": "tsx --env-file=.env.local scripts/screenshots.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.131.0",
