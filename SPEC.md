@@ -155,7 +155,9 @@ Status: built 2026-10-19, commits `b2a9574` to `394edbf`; the founder's review o
 
 ### Phase 5 (later, not in MVP)
 
-Stripe annual plans ($600 to $1,200 per org, consultant tier), Resend email reminders at 11 months and 30 days before audit date, Vanta and Drata evidence push, consultant multi-org and white-label, SSO.
+Stripe annual plans ($600 to $1,200 per org, consultant tier), Resend email reminders at 11 months and 30 days before audit date, Vanta and Drata evidence push, consultant multi-org and white-label, SSO. Optional, only if customers ask: a dark theme (the `.dark` variables already exist in `globals.css`; nothing switches to them, and every new color pair must stay AA).
+
+Order of work before Phase 5 starts: the section 14 domain, email and deploy steps, then one pilot company through a full plan, drill and report on the deployed site. Billing and reminders need a domain and a live site; the Vanta and Drata push needs a customer who uses one of them.
 
 Small follow-ups queued from Phase 3, not needed for the MVP: a QR code next to each participant link on the exercise page, so people in the room scan the facilitator's screen instead of receiving a link; and an option to reuse an existing org-owned scenario when creating a new exercise, so an exercise ended by mistake can be rerun without generating again.
 
@@ -309,6 +311,7 @@ Domain and email, in this order (none of it is needed for local development or t
 - [ ] **Custom SMTP, before anyone outside the Supabase team signs in.** Supabase's built-in mailer delivers only to team members, a few messages an hour. Create a Resend account, add the domain and publish the DNS records it gives (SPF, DKIM, DMARC), then paste Resend's SMTP host, port, user and password into Authentication > Emails > SMTP Settings with sender `Valmius <login@yourdomain>` and a reply-to of the support mailbox. Raise the email limit under Authentication > Rate Limits. Test by signing in from an address that is not on the Supabase team. The same Resend account carries the Phase 5 reminder emails.
 - [ ] **Sign-in email templates, right after custom SMTP.** The dashboard locks template editing until custom SMTP exists. Then, in Authentication > Emails, point the Magic Link and Confirm signup templates at `/auth/confirm` with the token hash (SUPABASE-SETUP.md section 5b), so links work from any device. Until then the app accepts Supabase's default link, which only works in the browser that requested it; that covers the manual check.
 - [ ] **Domain at deploy.** Add the domain to the Vercel project, set `NEXT_PUBLIC_SITE_URL` to it, and set the Supabase Site URL and redirect URL (see the launch list below).
+- [ ] **Lighthouse on the deployed landing page**, right after the first deploy: in Chrome, DevTools > Lighthouse, mobile and desktop. Expect accessibility 100 and performance 90 or above (the local production build scored 93 mobile and 99 desktop on 2026-10-19); record the numbers in the Phase 4.5 status line. Headless runs vary a few points, so judge trends, not single points.
 
 Before the free generator goes public:
 - [x] **Turn on Anthropic auto-reload.** (On as of 2026-10-13.) Console > Settings > Billing > Auto-reload > Edit. Trigger: balance below $10. Reload: $25. It stays off during development on purpose (running out of prepaid credits is a cheap, recoverable stop while learning the burn rate); once strangers use the generator, a stalled API is a broken product.
