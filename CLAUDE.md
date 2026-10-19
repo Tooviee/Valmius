@@ -13,14 +13,18 @@ reminders (spend cap, auto-reload, launch checklist): raise them whenever their 
 - `pnpm typecheck`, `pnpm lint`, `pnpm format`
 - `pnpm test` (Vitest, offline), `pnpm test:db` (hosted Supabase; creates and deletes `@e2e.drillday.test` auth users), `pnpm test:e2e` (Playwright, builds and starts its own server on port 3100; stop `pnpm dev` first)
 - `pnpm db:migrate` (supabase db push), `pnpm db:seed` (upsert the 12 scenario packs), `pnpm db:types`
+- `pnpm screenshots` (needs a running `LLM_PROVIDER=mock` server; seeds a throwaway account, writes
+  the landing-page images to `public/screens` and phone views to `tmp/`, deletes the account)
 
 ## Layout
 
 `src/app` routes (`/generate` public, `/login` + `/auth/confirm` auth, `/app/**` signed-in including
-`/app/evidence`, `/x/[token]` participant) · `src/components` ·
+`/app/evidence`, `/x/[token]` participant; `error.tsx`, `not-found.tsx`, `app/loading.tsx`) ·
+`src/components` (`brand/logo.tsx` mark and wordmark, `page-header.tsx`, `landing/*`) ·
 `src/lib/{auth,exercise,report,llm,plan,markdown,pdf,docx,rate-limit,schemas,supabase}` ·
 `src/server/actions` · `src/proxy.ts` (admin basic auth + `/app` session refresh) ·
-`supabase/migrations` · `tests/{unit,integration,e2e,fixtures,helpers}` · `scripts/seed.ts`
+`supabase/migrations` · `tests/{unit,integration,e2e,fixtures,helpers}` (`helpers/seed.ts` seeds an
+org, plan and exercises through the admin client) · `scripts/{seed,screenshots}.ts`
 
 ## Rules
 
@@ -43,6 +47,15 @@ reminders (spend cap, auto-reload, launch checklist): raise them whenever their 
   Only `src/lib/supabase/admin.ts` reads `leads`, `events` and `rate_limits`.
 - Store the salted IP hash, never the IP. Never log email addresses or visitor free text to `events`.
 - Conventional commits, one per build item. Never commit `.env.local`.
+- Design: light theme only; colors come from the variables in `src/app/globals.css` (warm white,
+  navy ink, deep-blue primary, every pair AA), never from Tailwind palette classes. `font-display`
+  (Fraunces) is for h1/h2 and landing-page display text; body text stays Geist. Every app page
+  starts with `PageHeader`; every `<main>` has `id="main" tabIndex={-1}` for the skip link.
+- Accessibility: `tests/e2e/a11y.spec.ts` sweeps every route with axe (WCAG 2.2 AA) and must stay
+  empty, so add new routes to it. Status text uses `role="status"`; ticking content (the timer) is
+  never live, only its transitions are. Every control must be reachable with Tab
+  (`tests/e2e/keyboard.spec.ts`). Under `lg` the console shows one panel at a time; tables scroll
+  inside their container rather than the page.
 
 ## Gotchas
 
@@ -64,6 +77,10 @@ reminders (spend cap, auto-reload, launch checklist): raise them whenever their 
   the child trigger fires. See `20261015000006`; the db suite deletes users with ended exercises.
 - `Poller` only refreshes visible tabs (and on `visibilitychange`); a background tab in the Chrome tool
   never updates, so reload it instead of waiting.
+- Playwright has two projects: `chromium` (desktop) ignores `phone.spec.ts`; `phone` (iPhone 13
+  emulation in Chromium, no WebKit download) runs only it. `browser.newContext()` inside a test
+  inherits the config's `use` options, including the test IP header.
+- `next/font` Fraunces needs `style: ["normal", "italic"]` or `<em>` renders a faux italic.
 - Finalizing a report needs the private `reports` Storage bucket (SUPABASE-SETUP.md section 6); the
   action reports its absence instead of failing silently. A PDF cannot contain its own SHA-256, so the
   file hash lives in the vault and the PDF prints a content fingerprint instead.
