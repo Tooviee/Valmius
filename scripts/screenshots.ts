@@ -9,13 +9,9 @@
  *   BASE_URL=http://localhost:3100 pnpm screenshots
  */
 import { mkdirSync } from "node:fs";
-import { randomBytes } from "node:crypto";
 import { chromium } from "@playwright/test";
 import { createClient } from "@supabase/supabase-js";
-import answers from "../tests/fixtures/questionnaire-answers.json";
-import planSections from "../tests/fixtures/llm/plan-sections.json";
-import { buildNotificationMatrixSection } from "../src/lib/plan/notification-matrix";
-import { PLAN_SECTION_IDS, planSectionMeta } from "../src/lib/schemas/plan";
+import { seedApprovedPlan, seedExercise, seedOrganization } from "../tests/helpers/seed";
 
 const baseUrl = process.env.BASE_URL ?? "http://localhost:3000";
 const url = process.env.NEXT_PUBLIC_SUPABASE_URL!;
@@ -25,8 +21,6 @@ const admin = createClient(url, secret, {
   auth: { persistSession: false, autoRefreshToken: false },
 });
 
-const token = () => randomBytes(32).toString("base64url");
-
 async function setup() {
   const email = `screens-${Date.now()}@e2e.drillday.test`;
   const { data: created, error } = await admin.auth.admin.createUser({
@@ -35,183 +29,31 @@ async function setup() {
   });
   if (error) throw error;
   const userId = created.user.id;
-  const { data: org } = await admin
-    .from("organizations")
-    .insert({
-      name: "Northwind Clinic",
-      industry: "healthcare",
-      headcount_band: "11-50",
-      frameworks: ["hipaa", "soc2"],
-      timezone: "America/New_York",
-      created_by: userId,
-    })
-    .select("id")
-    .single();
-  const orgId = org!.id;
-  await admin.from("org_members").insert({ org_id: orgId, user_id: userId, role: "owner" });
-  const { data: questionnaire } = await admin
-    .from("questionnaires")
-    .insert({ org_id: orgId, answers, completed_at: new Date().toISOString(), created_by: userId })
-    .select("id")
-    .single();
-
-  const sections = PLAN_SECTION_IDS.map((id) =>
-    id === "notification_matrix"
-      ? buildNotificationMatrixSection({
-          companyName: "Northwind Clinic",
-          frameworks: ["hipaa", "soc2"],
-          dataTypes: answers.data_types,
-          regulatoryObligations: answers.regulatory_obligations,
-          customerObligations: answers.customer_notification_obligations,
-          insurerName: answers.outside_parties.insurer_name,
-          outsideCounsel: answers.outside_parties.outside_counsel,
-          owners: {
-            legal: "COO",
-            executive: "CEO",
-            communications: "Head of Patient Services",
-            technical: "IT Manager",
-          },
-        })
-      : {
-          id,
-          title: planSectionMeta(id).title,
-          ...(planSections as Record<string, { markdown: string; framework_refs: string[] }>)[id],
-          origin: "model",
-        },
-  );
-  await admin.from("ir_plans").insert({
-    org_id: orgId,
-    questionnaire_id: questionnaire!.id,
-    version: 1,
-    sections,
-    status: "approved",
-    approved_by_name: "Jordan Park, CEO",
-    approved_at: new Date().toISOString(),
-    created_by: userId,
+  const { orgId, questionnaireId } = await seedOrganization(admin, userId);
+  await seedApprovedPlan(admin, { orgId, questionnaireId, userId });
+  const live = await seedExercise(admin, {
+    orgId,
+    userId,
+    status: "live",
+    title: "Q4 ransomware drill",
   });
-
-  const { data: pack } = await admin
-    .from("scenarios")
-    .select("id")
-    .eq("is_pack", true)
-    .eq("type", "ransomware")
-    .limit(1)
-    .single();
-  const started = new Date(Date.now() - 23 * 60_000);
-  const at = (m: number) => new Date(started.getTime() + m * 60_000).toISOString();
-  const { data: exercise } = await admin
-    .from("exercises")
-    .insert({
-      org_id: orgId,
-      scenario_id: pack!.id,
-      title: "Q4 ransomware drill",
-      status: "live",
-      started_at: started.toISOString(),
-      revealed_count: 2,
-      reveal_times: [at(1), at(16)],
-      parking_lot: "Check whether the MSP has after-hours cover.",
-      facilitator_id: userId,
-    })
-    .select("id")
-    .single();
-  const exerciseId = exercise!.id;
-  const { data: participants } = await admin
-    .from("exercise_participants")
-    .insert([
-      {
-        exercise_id: exerciseId,
-        name: "Pat Lee",
-        role: "CEO",
-        token: token(),
-        attended_at: at(-3),
-      },
-      {
-        exercise_id: exerciseId,
-        name: "Sam Ng",
-        role: "IT Manager",
-        token: token(),
-        attended_at: at(-1),
-      },
-      {
-        exercise_id: exerciseId,
-        name: "Morgan Chen",
-        role: "Head of Patient Services",
-        token: token(),
-        attended_at: at(0),
-      },
-    ])
-    .select("token");
-  for (const [i, d] of [
-    ["Pat Lee", "Declare SEV1; Sam is Incident Commander, Morgan is Scribe", "Phone tree used"],
-    ["Team", "Isolate the file server; do not power it off", "Preserve the ransom note"],
-  ].entries()) {
-    await admin.from("decision_log").insert({
-      exercise_id: exerciseId,
-      inject_index: i,
-      actor_name: d[0],
-      decision: d[1],
-      notes: d[2],
-      created_by: userId,
-    });
-  }
-  await admin.from("findings").insert([
-    { exercise_id: exerciseId, kind: "strength", description: "SEV1 declared within two minutes." },
-    {
-      exercise_id: exerciseId,
-      kind: "gap",
-      description: "Nobody could find the insurer's claims line.",
-      severity: "high",
-    },
-  ]);
-
-  // A second, ended exercise with a report draft, for the report screenshot.
-  const { data: ended } = await admin
-    .from("exercises")
-    .insert({
-      org_id: orgId,
-      scenario_id: pack!.id,
-      title: "Spring ransomware drill",
-      status: "ended",
-      started_at: at(-10_000),
-      ended_at: at(-9_950),
-      revealed_count: 4,
-      reveal_times: [at(-9_999), at(-9_985), at(-9_970), at(-9_958)],
-      facilitator_id: userId,
-    })
-    .select("id")
-    .single();
-  const endedId = ended!.id;
-  await admin.from("exercise_participants").insert([
-    {
-      exercise_id: endedId,
-      name: "Pat Lee",
-      role: "CEO",
-      token: token(),
-      attended_at: at(-10_001),
-      signed_off_at: at(-9_948),
-      signature_name: "Pat Lee",
-    },
-    {
-      exercise_id: endedId,
-      name: "Sam Ng",
-      role: "IT Manager",
-      token: token(),
-      attended_at: at(-10_000),
-      signed_off_at: at(-9_947),
-      signature_name: "Sam Ng",
-    },
-  ]);
+  const ended = await seedExercise(admin, {
+    orgId,
+    userId,
+    status: "ended",
+    title: "Spring ransomware drill",
+  });
   const { data: link, error: linkError } = await admin.auth.admin.generateLink({
     type: "magiclink",
     email,
   });
-  if (linkError || !link || !participants) throw linkError ?? new Error("setup incomplete");
+  if (linkError || !link) throw linkError ?? new Error("could not mint the sign-in link");
   return {
     userId,
     email,
-    exerciseId,
-    endedId,
-    participantToken: participants[0].token,
+    exerciseId: live.id,
+    endedId: ended.id,
+    participantToken: live.tokens[0],
     hashedToken: link.properties.hashed_token,
   };
 }

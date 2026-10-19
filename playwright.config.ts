@@ -21,7 +21,19 @@ export default defineConfig({
     // Every request carries a reserved test IP, so rate limits and events are isolated.
     extraHTTPHeaders: { "x-forwarded-for": E2E_TEST_IP },
   },
-  projects: [{ name: "chromium", use: { ...devices["Desktop Chrome"] } }],
+  projects: [
+    {
+      name: "chromium",
+      use: { ...devices["Desktop Chrome"] },
+      testIgnore: /phone\.spec\.ts/,
+    },
+    {
+      // iPhone 13 size and touch, in Chromium so no second browser download is needed.
+      name: "phone",
+      use: { ...devices["iPhone 13"], browserName: "chromium" },
+      testMatch: /phone\.spec\.ts/,
+    },
+  ],
   webServer: {
     command: `pnpm build && pnpm start --port ${PORT}`,
     url: baseURL,

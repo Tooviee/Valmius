@@ -106,7 +106,10 @@ test("a visitor generates a scenario, leaves an email and downloads the PDF", as
 
 test("the landing page captures a launch signup", async ({ page }) => {
   await page.goto("/");
-  await expect(page.getByRole("heading", { level: 1 })).toContainText("incident response plan");
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText(
+    "Write the plan.Run the drill.Keep the proof.",
+  );
+  await expect(page.getByText(/incident response plan/).first()).toBeVisible();
   await expect(page.getByText(/\$/)).toHaveCount(0);
 
   const email = `landing-${Date.now()}@${E2E_EMAIL_DOMAIN}`;
