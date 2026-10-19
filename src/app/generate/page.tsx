@@ -18,9 +18,13 @@ export default function GeneratePage() {
     <>
       <GeneratorViewTracker />
       <SiteHeader />
-      <main id="main" className="mx-auto w-full max-w-3xl flex-1 px-6 py-12">
+      <main
+        id="main"
+        tabIndex={-1}
+        className="mx-auto w-full max-w-3xl flex-1 px-6 py-12 outline-none"
+      >
         <div className="mb-10 space-y-3">
-          <h1 className="text-3xl font-semibold tracking-tight text-balance">
+          <h1 className="font-display text-4xl font-medium tracking-tight text-balance sm:text-5xl">
             Generate a tabletop exercise scenario
           </h1>
           <p className="leading-relaxed text-muted-foreground">

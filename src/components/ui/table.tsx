@@ -4,8 +4,27 @@ import * as React from "react";
 import { cn } from "cn";
 
 function Table({ className, ...props }: React.ComponentProps<"table">) {
+  // A table wider than its container scrolls sideways. Only then does the container become a
+  // focusable, labelled region, so keyboard users can scroll it (axe: scrollable-region-focusable)
+  // without a spare tab stop on every table that fits.
+  const container = React.useRef<HTMLDivElement>(null);
+  const [scrollable, setScrollable] = React.useState(false);
+  React.useEffect(() => {
+    const el = container.current;
+    if (!el) return;
+    const observer = new ResizeObserver(() => setScrollable(el.scrollWidth > el.clientWidth));
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
   return (
-    <div data-slot="table-container" className="relative w-full overflow-x-auto">
+    <div
+      ref={container}
+      data-slot="table-container"
+      className="relative w-full overflow-x-auto"
+      tabIndex={scrollable ? 0 : undefined}
+      role={scrollable ? "region" : undefined}
+      aria-label={scrollable ? "Table, scrolls sideways" : undefined}
+    >
       <table
         data-slot="table"
         className={cn("w-full caption-bottom text-sm", className)}

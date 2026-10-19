@@ -81,7 +81,7 @@ export default function HomePage() {
   return (
     <>
       <SiteHeader />
-      <main id="main" className="flex-1">
+      <main id="main" tabIndex={-1} className="flex-1 outline-none">
         {/* Hero */}
         <section className="paper overflow-hidden">
           <div className="mx-auto grid w-full max-w-6xl gap-12 px-6 pt-20 pb-12 lg:grid-cols-[1.05fr_1fr] lg:items-center lg:pt-28 lg:pb-20">

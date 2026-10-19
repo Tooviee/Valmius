@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import Link from "next/link";
+import { Wordmark } from "@/components/brand/logo";
 import { ParticipantView } from "@/components/exercise/participant-view";
 import { Poller } from "@/components/exercise/poller";
 import { loadParticipantView } from "@/lib/exercise/participant";
@@ -21,18 +21,14 @@ export default async function ParticipantPage({ params }: { params: Promise<{ to
     <>
       <header className="border-b">
         <div className="mx-auto flex h-14 w-full max-w-2xl items-center px-6">
-          <Link href="/" className="flex items-center gap-2 font-semibold tracking-tight">
-            <span
-              aria-hidden
-              className="grid size-6 place-items-center rounded-md bg-primary text-xs font-bold text-primary-foreground"
-            >
-              D
-            </span>
-            Valmius
-          </Link>
+          <Wordmark />
         </div>
       </header>
-      <main id="main" className="mx-auto w-full max-w-2xl flex-1 px-6 py-10">
+      <main
+        id="main"
+        tabIndex={-1}
+        className="mx-auto w-full max-w-2xl flex-1 px-6 py-10 outline-none"
+      >
         {view ? (
           <>
             <Poller
@@ -43,7 +39,9 @@ export default async function ParticipantPage({ params }: { params: Promise<{ to
           </>
         ) : (
           <div className="space-y-2" data-testid="invalid-link">
-            <h1 className="text-2xl font-semibold tracking-tight">This link is not valid</h1>
+            <h1 className="font-display text-3xl font-medium tracking-tight">
+              This link is not valid
+            </h1>
             <p className="text-muted-foreground">
               It may have expired (links stop working 30 days after an exercise ends) or been copied
               incompletely. Ask the facilitator for a new one.

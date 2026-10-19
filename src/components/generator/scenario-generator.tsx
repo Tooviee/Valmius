@@ -37,7 +37,7 @@ const initialState: GenerateState = { status: "idle" };
 function FieldError({ id, message }: { id: string; message?: string }) {
   if (!message) return null;
   return (
-    <p id={id} className="text-sm text-destructive">
+    <p id={id} role="alert" className="text-sm text-destructive">
       {message}
     </p>
   );
@@ -195,7 +195,7 @@ export function ScenarioGenerator() {
           </Button>
           {pending && (
             <p role="status" className="text-sm text-muted-foreground">
-              This can take up to a minute.
+              Writing the scenario. This can take up to a minute.
             </p>
           )}
         </div>

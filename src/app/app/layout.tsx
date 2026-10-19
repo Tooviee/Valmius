@@ -10,7 +10,11 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   return (
     <>
       <AppHeader email={user.email} orgName={context?.org.name ?? null} />
-      <main id="main" className="mx-auto w-full max-w-5xl flex-1 px-6 py-10">
+      <main
+        id="main"
+        tabIndex={-1}
+        className="mx-auto w-full max-w-5xl flex-1 px-6 py-10 outline-none"
+      >
         {children}
       </main>
       <SiteFooter />

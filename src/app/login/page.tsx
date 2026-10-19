@@ -21,9 +21,13 @@ export default async function LoginPage({
   return (
     <>
       <SiteHeader />
-      <main id="main" className="mx-auto w-full max-w-md flex-1 px-6 py-16">
+      <main
+        id="main"
+        tabIndex={-1}
+        className="mx-auto w-full max-w-md flex-1 px-6 py-16 outline-none"
+      >
         <div className="mb-8 space-y-2">
-          <h1 className="text-2xl font-semibold tracking-tight">Sign in to Valmius</h1>
+          <h1 className="font-display text-3xl font-medium tracking-tight">Sign in to Valmius</h1>
           <p className="text-sm leading-relaxed text-muted-foreground">
             Enter your work email and we will send you a link that signs you in.
           </p>
