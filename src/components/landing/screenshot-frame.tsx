@@ -10,6 +10,7 @@ export function ScreenshotFrame({
   caption,
   className,
   priority = false,
+  sizes = "(min-width: 1024px) 50vw, 100vw",
 }: {
   src: string;
   alt: string;
@@ -18,6 +19,8 @@ export function ScreenshotFrame({
   caption?: string;
   className?: string;
   priority?: boolean;
+  /** Rendered width per viewport, so phones fetch a phone-sized file, not the 2x desktop one. */
+  sizes?: string;
 }) {
   return (
     <figure className={cn("space-y-3", className)}>
@@ -36,6 +39,7 @@ export function ScreenshotFrame({
           width={width}
           height={height}
           priority={priority}
+          sizes={sizes}
           className="block h-auto w-full"
         />
       </div>

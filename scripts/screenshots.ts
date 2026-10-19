@@ -118,6 +118,7 @@ async function main() {
       `${baseUrl}/auth/confirm?token_hash=${link2.properties.hashed_token}&type=magiclink&next=/app`,
     );
     await p.waitForURL(/\/app$/);
+    await p.getByTestId("questionnaire-card").waitFor();
     await p.screenshot({ path: "tmp/phone-dashboard.png", fullPage: false });
     await p.goto(`${baseUrl}/app/questionnaire?step=2`);
     await p.getByTestId("questionnaire-step").waitFor();
@@ -126,7 +127,9 @@ async function main() {
     await p.getByTestId("plan-section").first().waitFor();
     await p.screenshot({ path: "tmp/phone-plan.png" });
     await p.goto(`${baseUrl}/app/exercises/${s.exerciseId}/run`);
-    await p.getByTestId("timer").waitFor();
+    // On a phone the console opens on the Scenario panel; the timer sits under Controls.
+    await p.getByTestId("console-tabs").waitFor();
+    await p.getByTestId("current-inject").waitFor();
     await p.screenshot({ path: "tmp/phone-console.png" });
     await p.goto(`${baseUrl}/x/${s.participantToken}`);
     await p.getByTestId("participant-identity").waitFor();
