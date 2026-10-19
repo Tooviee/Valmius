@@ -40,6 +40,16 @@ export function ExerciseTimer({
               ? "Next inject is due"
               : `Next inject due in ${formatElapsed(dueIn)}`}
       </p>
+      {/* Announced only at the moments that matter, never the ticking clock. */}
+      <p role="status" className="sr-only">
+        {endedAt
+          ? ""
+          : dueIn === null
+            ? "All injects have been revealed."
+            : dueIn === 0
+              ? "The next inject is due."
+              : ""}
+      </p>
     </div>
   );
 }

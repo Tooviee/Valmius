@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState, useEffect, useRef, useState, startTransition } from "react";
+import { cn } from "cn";
 import { ExerciseTimer } from "@/components/exercise/timer";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
@@ -35,6 +36,14 @@ import type { ConsoleFormState, ParkingLotState } from "@/server/actions/types";
 
 const idle: ConsoleFormState = { status: "idle" };
 const FACILITATOR_ACTOR = "Facilitator";
+
+// Under lg the three columns become one at a time, chosen from a bar of buttons.
+type Panel = "scenario" | "log" | "controls";
+const PANELS: { id: Panel; label: string }[] = [
+  { id: "scenario", label: "Scenario" },
+  { id: "log", label: "Log" },
+  { id: "controls", label: "Controls" },
+];
 
 const formatTime = (iso: string, timeZone: string) =>
   new Intl.DateTimeFormat("en-US", { timeStyle: "short", timeZone }).format(new Date(iso));
@@ -119,6 +128,9 @@ function DecisionForm({
           {pending ? "Logging..." : "Log decision"}
         </Button>
         {state.status === "error" && <p className="text-sm text-destructive">{state.message}</p>}
+        <p role="status" className="sr-only">
+          {state.status === "ok" ? "Decision logged." : ""}
+        </p>
       </div>
     </form>
   );
@@ -452,6 +464,8 @@ export function Console({ exercise, timeZone }: { exercise: ExerciseRecord; time
     const t = setInterval(() => setNow(new Date()), 15_000);
     return () => clearInterval(t);
   }, [live]);
+  const [panel, setPanel] = useState<Panel>("scenario");
+  const panelClass = (id: Panel) => cn("space-y-4", panel !== id && "hidden lg:block");
   const states = injectStates(
     scenario.injects,
     exercise.revealed_count,
@@ -476,9 +490,31 @@ export function Console({ exercise, timeZone }: { exercise: ExerciseRecord; time
         </Alert>
       )}
 
+      <div
+        role="group"
+        aria-label="Console sections"
+        className="sticky top-0 z-10 -mx-6 flex gap-1 border-b bg-background/95 px-6 py-2 backdrop-blur lg:hidden"
+        data-testid="console-tabs"
+      >
+        {PANELS.map((p) => (
+          <Button
+            key={p.id}
+            type="button"
+            size="sm"
+            variant={panel === p.id ? "default" : "ghost"}
+            aria-pressed={panel === p.id}
+            aria-controls={`console-${p.id}`}
+            onClick={() => setPanel(p.id)}
+            data-testid={`tab-${p.id}`}
+          >
+            {p.label}
+          </Button>
+        ))}
+      </div>
+
       <div className="grid gap-6 lg:grid-cols-[1.1fr_1.4fr_1fr]">
         {/* Left: scenario and current inject */}
-        <div className="space-y-4">
+        <div id="console-scenario" className={panelClass("scenario")}>
           <Section title="Scenario">
             <p className="font-medium">{scenario.title}</p>
             <p className="text-sm text-muted-foreground">
@@ -541,7 +577,7 @@ export function Console({ exercise, timeZone }: { exercise: ExerciseRecord; time
         </div>
 
         {/* Center: questions and decision log */}
-        <div className="space-y-4">
+        <div id="console-log" className={panelClass("log")}>
           {current && (
             <Section title="Discussion">
               <ul className="list-disc space-y-1 pl-5 text-sm">
@@ -592,7 +628,7 @@ export function Console({ exercise, timeZone }: { exercise: ExerciseRecord; time
         </div>
 
         {/* Right: timer, injects, findings, parking lot, end */}
-        <div className="space-y-4">
+        <div id="console-controls" className={panelClass("controls")}>
           <Section title="Timer">
             {exercise.started_at ? (
               <ExerciseTimer
