@@ -138,6 +138,19 @@ Build:
 
 Verify: unit tests for report schema and hash; Playwright: finalize a report, download PDF, hash in the UI matches `sha256sum` of the downloaded file; vault shows next-due date. Also: a database test that final reports are immutable and reported exercises freeze findings; an e2e amendment test; and the manual check, one report generated with the real provider on a real exercise and read by the founder.
 
+### Phase 4.5: Design and accessibility pass (added 2026-10-19, before launch)
+
+Direction from the founder: deep blue accent, light theme only, and the home page must be artistic, elegant and visually appealing; the app pages follow the same system but calmer. No new tables, no model calls, no dashboard steps.
+
+Build:
+- Accessibility to WCAG 2.2 AA: `@axe-core/playwright` in the e2e suite sweeping every route, including a participant page, and failing on any violation; a keyboard-only e2e test that creates, runs and ends an exercise; a skip link, labelled landmarks, visible focus on every control, live regions for save status and the timer, form errors announced, contrast fixes, and `prefers-reduced-motion` respected.
+- Visual system and brand: a Valmius wordmark and mark (header, favicon, participant page, PDF brand row); a serif display face for headings over the existing sans for body; a deep blue primary and navy ink on warm white, through the theme variables, all AA; a shared page header component; loading skeletons, an error page and a not-found page; progress copy for the model waits.
+- Mobile: the facilitator console becomes tabs (Scenario, Log, Controls) on narrow screens; tables on the exercise, evidence and report pages collapse or scroll without clipping; Playwright gains a phone project and the participant test runs on it.
+- Landing page as a designed sales page: real product screenshots captured by `scripts/screenshots.ts` from the mock-provider server into `public/screens`, a decorative inject-timeline illustration, the four compliance drivers as a visual, copy within the section 9.1 rule.
+- Recorded limit: react-pdf does not produce tagged (accessible) PDFs.
+
+Verify: `pnpm test:e2e` includes the axe sweep (clean on every route) and the keyboard walkthrough; Lighthouse on the landing page scores 100 for accessibility and 90 or above for performance (run manually, reported); phone screenshots of the dashboard, questionnaire, plan, console and participant page come from the screenshot script; all existing suites and the build stay green. No real-provider manual check: no prompt or schema changes; the founder reviews the screens instead.
+
 ### Phase 5 (later, not in MVP)
 
 Stripe annual plans ($600 to $1,200 per org, consultant tier), Resend email reminders at 11 months and 30 days before audit date, Vanta and Drata evidence push, consultant multi-org and white-label, SSO.
