@@ -54,7 +54,7 @@ export default async function AdminLeadsPage() {
     counts.find((row) => row.day === day && row.name === name)?.count ?? 0;
 
   return (
-    <main className="mx-auto w-full max-w-5xl space-y-12 px-6 py-10">
+    <main id="main" className="mx-auto w-full max-w-5xl space-y-12 px-6 py-10">
       <section className="space-y-4">
         <div>
           <h1 className="text-2xl font-semibold tracking-tight">Leads</h1>

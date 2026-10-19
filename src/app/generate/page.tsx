@@ -18,7 +18,7 @@ export default function GeneratePage() {
     <>
       <GeneratorViewTracker />
       <SiteHeader />
-      <main className="mx-auto w-full max-w-3xl flex-1 px-6 py-12">
+      <main id="main" className="mx-auto w-full max-w-3xl flex-1 px-6 py-12">
         <div className="mb-10 space-y-3">
           <h1 className="text-3xl font-semibold tracking-tight text-balance">
             Generate a tabletop exercise scenario

@@ -21,7 +21,7 @@ export default async function LoginPage({
   return (
     <>
       <SiteHeader />
-      <main className="mx-auto w-full max-w-md flex-1 px-6 py-16">
+      <main id="main" className="mx-auto w-full max-w-md flex-1 px-6 py-16">
         <div className="mb-8 space-y-2">
           <h1 className="text-2xl font-semibold tracking-tight">Sign in to Valmius</h1>
           <p className="text-sm leading-relaxed text-muted-foreground">

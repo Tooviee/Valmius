@@ -32,7 +32,7 @@ export default async function ParticipantPage({ params }: { params: Promise<{ to
           </Link>
         </div>
       </header>
-      <main className="mx-auto w-full max-w-2xl flex-1 px-6 py-10">
+      <main id="main" className="mx-auto w-full max-w-2xl flex-1 px-6 py-10">
         {view ? (
           <>
             <Poller

@@ -10,6 +10,7 @@
   --font-sans: var(--font-sans);
   --font-mono: var(--font-geist-mono);
   --font-heading: var(--font-sans);
+  --font-display: var(--font-display);
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -49,38 +50,42 @@
 }
 
 :root {
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
+  /* Warm paper, navy ink, deep blue accent. Every text/background pair below meets WCAG AA. */
+  --background: oklch(0.993 0.003 80);
+  --foreground: oklch(0.21 0.035 262);
   --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
+  --card-foreground: oklch(0.21 0.035 262);
   --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
+  --popover-foreground: oklch(0.21 0.035 262);
+  --primary: oklch(0.36 0.13 262);
+  --primary-foreground: oklch(0.99 0.004 262);
+  --secondary: oklch(0.94 0.025 262);
+  --secondary-foreground: oklch(0.3 0.09 262);
+  --muted: oklch(0.962 0.012 262);
+  --muted-foreground: oklch(0.46 0.035 262);
+  --accent: oklch(0.95 0.02 262);
+  --accent-foreground: oklch(0.25 0.06 262);
+  --destructive: oklch(0.52 0.21 27);
+  --border: oklch(0.905 0.012 262);
+  --input: oklch(0.905 0.012 262);
+  --ring: oklch(0.55 0.13 262);
+  --chart-1: oklch(0.36 0.13 262);
+  --chart-2: oklch(0.55 0.13 262);
+  --chart-3: oklch(0.72 0.09 262);
+  --chart-4: oklch(0.85 0.05 262);
+  --chart-5: oklch(0.93 0.025 262);
   --radius: 0.625rem;
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
+  --sidebar: oklch(0.985 0.005 80);
+  --sidebar-foreground: oklch(0.21 0.035 262);
+  --sidebar-primary: oklch(0.36 0.13 262);
+  --sidebar-primary-foreground: oklch(0.99 0.004 262);
+  --sidebar-accent: oklch(0.95 0.02 262);
+  --sidebar-accent-foreground: oklch(0.25 0.06 262);
+  --sidebar-border: oklch(0.905 0.012 262);
+  --sidebar-ring: oklch(0.55 0.13 262);
+  /* Landing-page tints. */
+  --tint: oklch(0.965 0.016 262);
+  --ink-soft: oklch(0.32 0.06 262);
 }
 
 .dark {
@@ -126,7 +131,81 @@
   }
   html {
     @apply font-sans;
+    scroll-behavior: smooth;
   }
+  /* One visible focus style for everything that can take focus. */
+  :focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
+  }
+  .font-display {
+    font-family: var(--font-display), Georgia, serif;
+    font-variation-settings:
+      "opsz" 72,
+      "SOFT" 30;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+}
+
+/* Entrance motion for the landing page; disabled above for people who prefer less motion. */
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.rise {
+  animation: rise 0.7s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+.rise-delay-1 {
+  animation-delay: 0.12s;
+}
+.rise-delay-2 {
+  animation-delay: 0.24s;
+}
+.rise-delay-3 {
+  animation-delay: 0.36s;
+}
+
+/* Paper with a faint deep-blue wash, for the landing page hero. */
+.paper {
+  background-color: var(--background);
+  background-image:
+    radial-gradient(60rem 30rem at 85% -10%, oklch(0.9 0.06 262 / 0.45), transparent 60%),
+    radial-gradient(40rem 20rem at -10% 110%, oklch(0.93 0.03 262 / 0.5), transparent 60%);
+}
+/* Deep-blue stage behind the hero screenshot: a lit panel with faint ruled lines. */
+.stage {
+  background-color: oklch(0.3 0.11 262);
+  background-image:
+    radial-gradient(50rem 28rem at 15% 0%, oklch(0.52 0.15 262 / 0.55), transparent 60%),
+    radial-gradient(30rem 22rem at 100% 100%, oklch(0.2 0.08 262 / 0.9), transparent 70%),
+    repeating-linear-gradient(0deg, transparent 0 23px, oklch(1 0 0 / 0.04) 23px 24px);
+}
+.hairline {
+  background-image: linear-gradient(
+    to right,
+    transparent,
+    var(--border) 20%,
+    var(--border) 80%,
+    transparent
+  );
+  height: 1px;
 }
 
 /* Rendered markdown for IR plan sections (preview and read-only views). */
