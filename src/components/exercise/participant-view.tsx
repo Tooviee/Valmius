@@ -41,7 +41,9 @@ export function ParticipantView({ view, token }: { view: View; token: string }) 
     <div className="space-y-6">
       <div className="space-y-1">
         <p className="text-sm text-muted-foreground">Tabletop exercise</p>
-        <h1 className="text-2xl font-semibold tracking-tight">{exercise.title}</h1>
+        <h1 className="font-display text-3xl font-medium tracking-tight text-balance">
+          {exercise.title}
+        </h1>
         <p className="text-sm text-muted-foreground" data-testid="participant-identity">
           You are <span className="font-medium text-foreground">{participant.name}</span>, playing{" "}
           <span className="font-medium text-foreground">{participant.role}</span>.

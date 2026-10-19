@@ -2,6 +2,7 @@ import { Document, Page, StyleSheet, Text, View } from "@react-pdf/renderer";
 import { markdownToBlocks, type Block, type InlineRun } from "@/lib/markdown/blocks";
 import { approvalLine, footerLine, formatPlanDate, type PlanExportInput } from "@/lib/plan/export";
 import { toPdfInline, toPdfText } from "./text";
+import { PdfMark } from "./brand";
 
 const colors = { text: "#171717", muted: "#525252", line: "#c4c4c4", fill: "#f4f4f5" };
 const lineHeight = (fontSize: number) => `${(fontSize * 1.45).toFixed(1)}pt`;
@@ -241,7 +242,10 @@ export function PlanDocument({ input }: { input: PlanExportInput }) {
     <Document title={title} author="Valmius" subject="Incident response plan">
       <Page size="LETTER" style={pdfStyles.page}>
         <View style={pdfStyles.brandRow} fixed>
-          <Text style={pdfStyles.brand}>Valmius</Text>
+          <View style={{ flexDirection: "row", alignItems: "center" }}>
+            <PdfMark />
+            <Text style={pdfStyles.brand}>Valmius</Text>
+          </View>
           <Text style={pdfStyles.brandNote}>
             {toPdfText(`Incident response plan, version ${plan.version}`)}
           </Text>

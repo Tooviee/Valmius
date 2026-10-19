@@ -4,6 +4,7 @@ import { requireOrg } from "@/lib/auth/session";
 import { loadPacks, loadPlanForExercise } from "@/lib/exercise/load";
 import { loadPlanFacts } from "@/lib/plan/load";
 import { createClient } from "@/lib/supabase/server";
+import { PageHeader } from "@/components/page-header";
 
 export const metadata: Metadata = {
   title: "New exercise",
@@ -28,12 +29,10 @@ export default async function NewExercisePage() {
 
   return (
     <div className="mx-auto max-w-3xl space-y-8">
-      <div className="space-y-2">
-        <h1 className="text-3xl font-semibold tracking-tight">New exercise</h1>
-        <p className="text-muted-foreground">
-          Pick the scenario, name the people in the room, and you get a link for each of them.
-        </p>
-      </div>
+      <PageHeader
+        title="New exercise"
+        description="Pick the scenario, name the people in the room, and you get a link for each of them."
+      />
       <NewExerciseForm packs={packs} canGenerate={facts !== null} planLabel={planLabel} />
     </div>
   );

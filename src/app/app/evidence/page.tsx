@@ -18,6 +18,7 @@ import { loadEvidence } from "@/lib/report/load";
 import { FRAMEWORK_LABELS, type Framework } from "@/lib/schemas/organization";
 import { SCENARIO_TYPE_LABELS } from "@/lib/schemas/scenario";
 import { createClient } from "@/lib/supabase/server";
+import { PageHeader } from "@/components/page-header";
 
 export const metadata: Metadata = {
   title: "Evidence vault",
@@ -49,22 +50,19 @@ export default async function EvidencePage() {
 
   return (
     <div className="space-y-8">
-      <div className="flex flex-wrap items-start justify-between gap-4">
-        <div className="space-y-2">
-          <h1 className="text-3xl font-semibold tracking-tight">Evidence vault</h1>
-          <p className="text-muted-foreground">
-            What an auditor, insurer or regulator asks for: the approved plan, every exercise with
-            its dated report and hash, and when the next test is due.
-          </p>
-        </div>
-        <a
-          href="/app/evidence/export"
-          className={buttonVariants({ variant: "outline" })}
-          data-testid="export-csv"
-        >
-          Export CSV
-        </a>
-      </div>
+      <PageHeader
+        title="Evidence vault"
+        description="What an auditor, insurer or regulator asks for: the approved plan, every exercise with its dated report and hash, and when the next test is due."
+        actions={
+          <a
+            href="/app/evidence/export"
+            className={buttonVariants({ variant: "outline" })}
+            data-testid="export-csv"
+          >
+            Export CSV
+          </a>
+        }
+      />
 
       <div className="grid gap-6 md:grid-cols-2">
         <Card data-testid="approved-plan-card">

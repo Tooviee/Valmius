@@ -13,6 +13,7 @@ import {
   type QuestionnaireStep,
 } from "@/lib/schemas/questionnaire";
 import { createClient } from "@/lib/supabase/server";
+import { PageHeader } from "@/components/page-header";
 
 export const metadata: Metadata = {
   title: "Questionnaire",
@@ -47,13 +48,10 @@ export default async function QuestionnairePage({
 
   return (
     <div className="space-y-8">
-      <div className="space-y-2">
-        <h1 className="text-3xl font-semibold tracking-tight">Questionnaire</h1>
-        <p className="text-muted-foreground">
-          Fifteen questions in five short steps. The plan is written from these answers, so the more
-          specific they are, the more useful the plan.
-        </p>
-      </div>
+      <PageHeader
+        title="Questionnaire"
+        description="Fifteen questions in five short steps. The plan is written from these answers, so the more specific they are, the more useful the plan."
+      />
 
       {data?.completed_at && (
         <Alert data-testid="questionnaire-complete">

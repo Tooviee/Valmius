@@ -20,6 +20,7 @@ import { FINDING_KIND_LABELS, FINDING_KINDS } from "@/lib/schemas/exercise";
 import { SCENARIO_TYPE_LABELS } from "@/lib/schemas/scenario";
 import { createClient } from "@/lib/supabase/server";
 import { deleteExerciseAction, startExerciseAction } from "@/server/actions/exercise";
+import { PageHeader } from "@/components/page-header";
 
 export const metadata: Metadata = {
   title: "Exercise",
@@ -43,81 +44,84 @@ export default async function ExercisePage({ params }: { params: Promise<{ id: s
 
   return (
     <div className="space-y-8">
-      <div className="flex flex-wrap items-start justify-between gap-4">
-        <div className="space-y-2">
-          <p className="text-sm text-muted-foreground">
+      <PageHeader
+        eyebrow={
+          <>
             <Link href="/app/exercises" className="underline-offset-4 hover:underline">
               Exercises
             </Link>{" "}
             / {exercise.title}
-          </p>
-          <h1 className="text-3xl font-semibold tracking-tight">{exercise.title}</h1>
-          <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
-            <ExerciseStatusBadge status={exercise.status} />
-            <span>
-              {SCENARIO_TYPE_LABELS[exercise.scenario.type]}: {scenario.title}
-              {exercise.scenario.is_pack ? "" : " (generated from your plan)"}
-            </span>
-            <span data-testid="exercise-plan">
-              {exercise.plan
-                ? `· Tests plan v${exercise.plan.version} (${exercise.plan.status})`
-                : "· No plan version attached"}
-            </span>
-            {exercise.scheduled_at && (
-              <span>· Scheduled {formatDateTime(exercise.scheduled_at, org.timezone)}</span>
+          </>
+        }
+        title={exercise.title}
+        actions={
+          <>
+            {exercise.status === "scheduled" && (
+              <>
+                <form action={deleteExerciseAction}>
+                  <input type="hidden" name="exerciseId" value={exercise.id} />
+                  <Button type="submit" variant="outline" size="sm">
+                    Discard
+                  </Button>
+                </form>
+                <form action={startExerciseAction}>
+                  <input type="hidden" name="exerciseId" value={exercise.id} />
+                  <Button type="submit" size="lg" data-testid="start-exercise">
+                    Start exercise
+                  </Button>
+                </form>
+              </>
             )}
-            {exercise.started_at && (
-              <span>· Started {formatDateTime(exercise.started_at, org.timezone)}</span>
+            {exercise.status === "live" && (
+              <Link
+                href={`/app/exercises/${exercise.id}/run`}
+                className={buttonVariants({ size: "lg" })}
+              >
+                Open the console
+              </Link>
             )}
-            {exercise.ended_at && (
-              <span>· Ended {formatDateTime(exercise.ended_at, org.timezone)}</span>
+            {(exercise.status === "ended" || exercise.status === "reported") && (
+              <Link
+                href={`/app/exercises/${exercise.id}/run`}
+                className={buttonVariants({ variant: "outline", size: "lg" })}
+              >
+                Review the log
+              </Link>
             )}
-          </div>
+            {(exercise.status === "ended" || exercise.status === "reported") && (
+              <Link
+                href={`/app/exercises/${exercise.id}/report`}
+                className={buttonVariants({ size: "lg" })}
+                data-testid="open-report"
+              >
+                {exercise.status === "reported" ? "After-action report" : "Write the report"}
+              </Link>
+            )}
+          </>
+        }
+      >
+        <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
+          <ExerciseStatusBadge status={exercise.status} />
+          <span>
+            {SCENARIO_TYPE_LABELS[exercise.scenario.type]}: {scenario.title}
+            {exercise.scenario.is_pack ? "" : " (generated from your plan)"}
+          </span>
+          <span data-testid="exercise-plan">
+            {exercise.plan
+              ? `· Tests plan v${exercise.plan.version} (${exercise.plan.status})`
+              : "· No plan version attached"}
+          </span>
+          {exercise.scheduled_at && (
+            <span>· Scheduled {formatDateTime(exercise.scheduled_at, org.timezone)}</span>
+          )}
+          {exercise.started_at && (
+            <span>· Started {formatDateTime(exercise.started_at, org.timezone)}</span>
+          )}
+          {exercise.ended_at && (
+            <span>· Ended {formatDateTime(exercise.ended_at, org.timezone)}</span>
+          )}
         </div>
-        <div className="flex flex-wrap items-center gap-2">
-          {exercise.status === "scheduled" && (
-            <>
-              <form action={deleteExerciseAction}>
-                <input type="hidden" name="exerciseId" value={exercise.id} />
-                <Button type="submit" variant="outline" size="sm">
-                  Discard
-                </Button>
-              </form>
-              <form action={startExerciseAction}>
-                <input type="hidden" name="exerciseId" value={exercise.id} />
-                <Button type="submit" size="lg" data-testid="start-exercise">
-                  Start exercise
-                </Button>
-              </form>
-            </>
-          )}
-          {exercise.status === "live" && (
-            <Link
-              href={`/app/exercises/${exercise.id}/run`}
-              className={buttonVariants({ size: "lg" })}
-            >
-              Open the console
-            </Link>
-          )}
-          {(exercise.status === "ended" || exercise.status === "reported") && (
-            <Link
-              href={`/app/exercises/${exercise.id}/run`}
-              className={buttonVariants({ variant: "outline", size: "lg" })}
-            >
-              Review the log
-            </Link>
-          )}
-          {(exercise.status === "ended" || exercise.status === "reported") && (
-            <Link
-              href={`/app/exercises/${exercise.id}/report`}
-              className={buttonVariants({ size: "lg" })}
-              data-testid="open-report"
-            >
-              {exercise.status === "reported" ? "After-action report" : "Write the report"}
-            </Link>
-          )}
-        </div>
-      </div>
+      </PageHeader>
 
       {exercise.plan ? (
         exercise.plan.status === "draft" && (

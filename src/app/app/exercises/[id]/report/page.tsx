@@ -13,6 +13,7 @@ import { loadExercise } from "@/lib/exercise/load";
 import { loadReport, loadReports } from "@/lib/report/load";
 import { createClient } from "@/lib/supabase/server";
 import { amendReportAction } from "@/server/actions/report";
+import { PageHeader } from "@/components/page-header";
 
 export const metadata: Metadata = {
   title: "After-action report",
@@ -61,14 +62,10 @@ export default async function ReportPage({
     return (
       <div className="mx-auto max-w-2xl space-y-8">
         {crumbs}
-        <div className="space-y-2">
-          <h1 className="text-3xl font-semibold tracking-tight">After-action report</h1>
-          <p className="text-muted-foreground">
-            The dated record of this exercise: who took part, what was decided and when, what was
-            found, and which controls it evidences. You edit the narrative, then finalize it into a
-            PDF with a verifiable hash.
-          </p>
-        </div>
+        <PageHeader
+          title="After-action report"
+          description="The dated record of this exercise: who took part, what was decided and when, what was found, and which controls it evidences. You edit the narrative, then finalize it into a PDF with a verifiable hash."
+        />
         <Card>
           <CardHeader>
             <CardTitle>Ready to write</CardTitle>
@@ -96,59 +93,58 @@ export default async function ReportPage({
 
   return (
     <div className="space-y-8">
-      <div className="flex flex-wrap items-start justify-between gap-4">
-        <div className="space-y-2">
-          {crumbs}
-          <h1 className="text-3xl font-semibold tracking-tight">
-            After-action report: {exercise.title}
-          </h1>
-          <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
-            <Badge variant={isFinal ? "secondary" : "outline"} data-testid="report-status">
-              Version {report.version} · {isFinal ? "final" : "draft"}
-            </Badge>
-            {isFinal && report.finalized_at && (
-              <span>Finalized {fmt(report.finalized_at, org.timezone)}</span>
+      <PageHeader
+        eyebrow={crumbs}
+        title={<>After-action report: {exercise.title}</>}
+        actions={
+          <>
+            {isFinal && (
+              <>
+                <a
+                  href={`/app/exercises/${exercise.id}/report/${report.id}/pdf`}
+                  className={buttonVariants({ size: "lg" })}
+                  data-testid="download-report"
+                >
+                  Download PDF
+                </a>
+                {!hasDraft && (
+                  <form action={amendReportAction}>
+                    <input type="hidden" name="reportId" value={report.id} />
+                    <Button type="submit" variant="outline" size="lg">
+                      Amend
+                    </Button>
+                  </form>
+                )}
+              </>
             )}
-            {versions.length > 1 && (
-              <nav aria-label="Report versions" className="flex items-center gap-1.5">
-                <span>Versions:</span>
-                {versions.map((r) => (
-                  <Link
-                    key={r.id}
-                    href={`/app/exercises/${exercise.id}/report?v=${r.version}`}
-                    aria-current={r.id === report.id ? "page" : undefined}
-                    className={`rounded-md border px-2 py-0.5 hover:bg-muted ${r.id === report.id ? "border-primary bg-muted font-medium" : ""}`}
-                  >
-                    v{r.version}
-                    {r.status === "final" ? " ✓" : ""}
-                  </Link>
-                ))}
-              </nav>
-            )}
-          </div>
-        </div>
-        <div className="flex flex-wrap items-center gap-2">
-          {isFinal && (
-            <>
-              <a
-                href={`/app/exercises/${exercise.id}/report/${report.id}/pdf`}
-                className={buttonVariants({ size: "lg" })}
-                data-testid="download-report"
-              >
-                Download PDF
-              </a>
-              {!hasDraft && (
-                <form action={amendReportAction}>
-                  <input type="hidden" name="reportId" value={report.id} />
-                  <Button type="submit" variant="outline" size="lg">
-                    Amend
-                  </Button>
-                </form>
-              )}
-            </>
+          </>
+        }
+      >
+        <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
+          <Badge variant={isFinal ? "secondary" : "outline"} data-testid="report-status">
+            Version {report.version} · {isFinal ? "final" : "draft"}
+          </Badge>
+          {isFinal && report.finalized_at && (
+            <span>Finalized {fmt(report.finalized_at, org.timezone)}</span>
+          )}
+          {versions.length > 1 && (
+            <nav aria-label="Report versions" className="flex items-center gap-1.5">
+              <span>Versions:</span>
+              {versions.map((r) => (
+                <Link
+                  key={r.id}
+                  href={`/app/exercises/${exercise.id}/report?v=${r.version}`}
+                  aria-current={r.id === report.id ? "page" : undefined}
+                  className={`rounded-md border px-2 py-0.5 hover:bg-muted ${r.id === report.id ? "border-primary bg-muted font-medium" : ""}`}
+                >
+                  v{r.version}
+                  {r.status === "final" ? " ✓" : ""}
+                </Link>
+              ))}
+            </nav>
           )}
         </div>
-      </div>
+      </PageHeader>
 
       {isFinal && report.sha256 && (
         <Alert data-testid="report-hash">

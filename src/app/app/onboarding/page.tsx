@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { OnboardingForm } from "@/components/app/onboarding-form";
 import { getOrgContext, requireUser } from "@/lib/auth/session";
+import { PageHeader } from "@/components/page-header";
 
 export const metadata: Metadata = {
   title: "Set up your organization",
@@ -16,15 +17,11 @@ export default async function OnboardingPage() {
 
   return (
     <div className="mx-auto max-w-2xl">
-      <div className="mb-10 space-y-3">
-        <h1 className="text-3xl font-semibold tracking-tight text-balance">
-          Tell us about your company
-        </h1>
-        <p className="leading-relaxed text-muted-foreground">
-          This sets up the organization your plan, exercises and reports belong to. It takes a
-          minute; the questionnaire for the plan itself comes next.
-        </p>
-      </div>
+      <PageHeader
+        className="mb-10"
+        title="Tell us about your company"
+        description="This sets up the organization your plan, exercises and reports belong to. It takes a minute; the questionnaire for the plan itself comes next."
+      />
       <OnboardingForm timeZones={timeZones} />
     </div>
   );

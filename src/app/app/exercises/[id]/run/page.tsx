@@ -7,6 +7,7 @@ import { ExerciseStatusBadge } from "@/components/exercise/status-badge";
 import { requireOrg } from "@/lib/auth/session";
 import { loadExercise } from "@/lib/exercise/load";
 import { createClient } from "@/lib/supabase/server";
+import { PageHeader } from "@/components/page-header";
 
 export const metadata: Metadata = {
   title: "Facilitator console",
@@ -29,9 +30,9 @@ export default async function RunPage({ params }: { params: Promise<{ id: string
         intervalMs={10_000}
         enabled={exercise.status === "live" || (exercise.status === "ended" && pendingSignOffs)}
       />
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="space-y-1">
-          <p className="text-sm text-muted-foreground">
+      <PageHeader
+        eyebrow={
+          <>
             <Link href="/app/exercises" className="underline-offset-4 hover:underline">
               Exercises
             </Link>{" "}
@@ -42,17 +43,19 @@ export default async function RunPage({ params }: { params: Promise<{ id: string
             >
               {exercise.title}
             </Link>
-          </p>
-          <h1 className="text-2xl font-semibold tracking-tight">{exercise.title}</h1>
-        </div>
-        <div className="flex items-center gap-3 text-sm text-muted-foreground">
-          <ExerciseStatusBadge status={exercise.status} />
-          <span>
-            {exercise.participants.filter((p) => p.attended_at).length}/
-            {exercise.participants.length} attending
-          </span>
-        </div>
-      </div>
+          </>
+        }
+        title={exercise.title}
+        actions={
+          <div className="flex items-center gap-3 text-sm text-muted-foreground">
+            <ExerciseStatusBadge status={exercise.status} />
+            <span>
+              {exercise.participants.filter((p) => p.attended_at).length}/
+              {exercise.participants.length} attending
+            </span>
+          </div>
+        }
+      />
       <Console exercise={exercise} timeZone={org.timezone} />
     </div>
   );

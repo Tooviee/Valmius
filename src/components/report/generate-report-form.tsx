@@ -46,7 +46,7 @@ export function GenerateReportForm({
         </Button>
         {pending && (
           <p role="status" className="text-sm text-muted-foreground">
-            About half a minute.
+            Writing the narrative from the decision log and findings. About half a minute.
           </p>
         )}
       </div>

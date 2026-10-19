@@ -14,6 +14,7 @@ import { requireOrg } from "@/lib/auth/session";
 import { loadExercises } from "@/lib/exercise/load";
 import { SCENARIO_TYPE_LABELS } from "@/lib/schemas/scenario";
 import { createClient } from "@/lib/supabase/server";
+import { PageHeader } from "@/components/page-header";
 
 export const metadata: Metadata = {
   title: "Exercises",
@@ -32,18 +33,15 @@ export default async function ExercisesPage() {
 
   return (
     <div className="space-y-8">
-      <div className="flex flex-wrap items-start justify-between gap-4">
-        <div className="space-y-2">
-          <h1 className="text-3xl font-semibold tracking-tight">Tabletop exercises</h1>
-          <p className="text-muted-foreground">
-            Each exercise is a dated, facilitated run of a scenario against your plan, with a
-            decision log and findings for the after-action report.
-          </p>
-        </div>
-        <Link href="/app/exercises/new" className={buttonVariants({ size: "lg" })}>
-          New exercise
-        </Link>
-      </div>
+      <PageHeader
+        title="Tabletop exercises"
+        description="Each exercise is a dated, facilitated run of a scenario against your plan, with a decision log and findings for the after-action report."
+        actions={
+          <Link href="/app/exercises/new" className={buttonVariants({ size: "lg" })}>
+            New exercise
+          </Link>
+        }
+      />
 
       {exercises.length === 0 ? (
         <p

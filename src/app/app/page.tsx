@@ -15,6 +15,7 @@ import { INDUSTRY_LABELS, type Industry } from "@/lib/schemas/generator";
 import { FRAMEWORK_LABELS, type Framework } from "@/lib/schemas/organization";
 import { dueState, nextTestDue } from "@/lib/report/due";
 import { createClient } from "@/lib/supabase/server";
+import { PageHeader } from "@/components/page-header";
 
 export const metadata: Metadata = {
   title: "Dashboard",
@@ -71,14 +72,17 @@ export default async function DashboardPage() {
 
   return (
     <div className="space-y-10">
-      <div className="space-y-2">
-        <h1 className="text-3xl font-semibold tracking-tight">{org.name}</h1>
-        <p className="text-sm text-muted-foreground">
-          {INDUSTRY_LABELS[org.industry as Industry] ?? org.industry} · {org.headcount_band}{" "}
-          employees
-          {frameworks.length > 0 && ` · ${frameworks.join(", ")}`}
-        </p>
-      </div>
+      <PageHeader
+        eyebrow="Dashboard"
+        title={org.name}
+        description={
+          <>
+            {INDUSTRY_LABELS[org.industry as Industry] ?? org.industry} · {org.headcount_band}{" "}
+            employees
+            {frameworks.length > 0 && ` · ${frameworks.join(", ")}`}
+          </>
+        }
+      />
 
       <div className="grid gap-6 md:grid-cols-3">
         <Card data-testid="questionnaire-card">

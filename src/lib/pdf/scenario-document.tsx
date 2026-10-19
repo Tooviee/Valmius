@@ -2,6 +2,7 @@ import { Document, Page, StyleSheet, Text, View } from "@react-pdf/renderer";
 import { FRAMEWORK_REFS, FRAMEWORK_REF_SUMMARIES } from "@/lib/schemas/frameworks";
 import { SCENARIO_TYPE_LABELS, type Scenario } from "@/lib/schemas/scenario";
 import { toPdfText } from "./text";
+import { PdfMark } from "./brand";
 
 const colors = {
   text: "#171717",
@@ -175,7 +176,10 @@ function WriteLines({ count }: { count: number }) {
 function BrandRow({ note }: { note: string }) {
   return (
     <View style={styles.brandRow} fixed>
-      <Text style={styles.brand}>Valmius</Text>
+      <View style={{ flexDirection: "row", alignItems: "center" }}>
+        <PdfMark />
+        <Text style={styles.brand}>Valmius</Text>
+      </View>
       <Text style={styles.brandNote}>{note}</Text>
     </View>
   );

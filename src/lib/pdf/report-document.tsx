@@ -3,6 +3,7 @@ import { markdownToBlocks } from "@/lib/markdown/blocks";
 import { REPORT_NARRATIVE_SECTIONS, type ReportContent } from "@/lib/schemas/report";
 import { Blocks, pdfStyles as s } from "./plan-document";
 import { toPdfText } from "./text";
+import { PdfMark } from "./brand";
 
 export type ReportPdfInput = {
   content: ReportContent;
@@ -94,7 +95,10 @@ export function ReportDocument({ input }: { input: ReportPdfInput }) {
     >
       <Page size="LETTER" style={s.page}>
         <View style={s.brandRow} fixed>
-          <Text style={s.brand}>Valmius</Text>
+          <View style={{ flexDirection: "row", alignItems: "center" }}>
+            <PdfMark />
+            <Text style={s.brand}>Valmius</Text>
+          </View>
           <Text style={s.brandNote}>{toPdfText(`After-action report, version ${version}`)}</Text>
         </View>
         <Footer content={content} version={version} />

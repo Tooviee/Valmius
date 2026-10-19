@@ -11,6 +11,7 @@ import { requireOrg } from "@/lib/auth/session";
 import { loadPlan, loadPlanFacts, loadPlanVersions } from "@/lib/plan/load";
 import { loadEvidence } from "@/lib/report/load";
 import { createClient } from "@/lib/supabase/server";
+import { PageHeader } from "@/components/page-header";
 
 export const metadata: Metadata = {
   title: "IR plan",
@@ -44,13 +45,10 @@ export default async function PlanPage({
   if (versions.length === 0) {
     return (
       <div className="mx-auto max-w-2xl space-y-8">
-        <div className="space-y-2">
-          <h1 className="text-3xl font-semibold tracking-tight">Incident response plan</h1>
-          <p className="text-muted-foreground">
-            An 11-section written plan generated from your questionnaire answers. You edit it,
-            approve it, and export it as PDF or Word.
-          </p>
-        </div>
+        <PageHeader
+          title="Incident response plan"
+          description="An 11-section written plan generated from your questionnaire answers. You edit it, approve it, and export it as PDF or Word."
+        />
         {loaded ? (
           <Card>
             <CardHeader>
@@ -92,58 +90,58 @@ export default async function PlanPage({
 
   return (
     <div className="space-y-8">
-      <div className="flex flex-wrap items-start justify-between gap-4">
-        <div className="space-y-2">
-          <h1 className="text-3xl font-semibold tracking-tight">Incident response plan</h1>
-          <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
-            <Badge variant={approved ? "secondary" : "outline"} data-testid="plan-status">
-              Version {plan.version} · {approved ? "approved" : "draft"}
-            </Badge>
-            <span>Created {formatDate(plan.created_at, org.timezone)}</span>
-            {approved && (
-              <span>
-                · Approved by {plan.approved_by_name} on{" "}
-                {formatDate(plan.approved_at!, org.timezone)}
-              </span>
-            )}
-          </div>
-          <VersionNav versions={versions} current={plan.version} />
-          <p className="text-sm text-muted-foreground" data-testid="last-tested">
-            {lastTested?.ended_at ? (
-              <>
-                Last tested {formatDate(lastTested.ended_at, org.timezone)} ·{" "}
-                <Link
-                  href={`/app/exercises/${lastTested.id}/report`}
-                  className="underline underline-offset-4"
-                >
-                  {lastTested.report ? "after-action report" : "report not written yet"}
-                </Link>
-              </>
-            ) : (
-              <>
-                Not tested yet ·{" "}
-                <Link href="/app/exercises/new" className="underline underline-offset-4">
-                  plan an exercise
-                </Link>
-              </>
-            )}
-          </p>
+      <PageHeader
+        title="Incident response plan"
+        actions={
+          <>
+            <a
+              href={`/app/plan/${plan.id}/export/pdf`}
+              className={buttonVariants({ variant: "outline", size: "sm" })}
+            >
+              Export PDF
+            </a>
+            <a
+              href={`/app/plan/${plan.id}/export/docx`}
+              className={buttonVariants({ variant: "outline", size: "sm" })}
+            >
+              Export Word
+            </a>
+          </>
+        }
+      >
+        <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
+          <Badge variant={approved ? "secondary" : "outline"} data-testid="plan-status">
+            Version {plan.version} · {approved ? "approved" : "draft"}
+          </Badge>
+          <span>Created {formatDate(plan.created_at, org.timezone)}</span>
+          {approved && (
+            <span>
+              · Approved by {plan.approved_by_name} on {formatDate(plan.approved_at!, org.timezone)}
+            </span>
+          )}
         </div>
-        <div className="flex flex-wrap items-center gap-2">
-          <a
-            href={`/app/plan/${plan.id}/export/pdf`}
-            className={buttonVariants({ variant: "outline", size: "sm" })}
-          >
-            Export PDF
-          </a>
-          <a
-            href={`/app/plan/${plan.id}/export/docx`}
-            className={buttonVariants({ variant: "outline", size: "sm" })}
-          >
-            Export Word
-          </a>
-        </div>
-      </div>
+        <VersionNav versions={versions} current={plan.version} />
+        <p className="text-sm text-muted-foreground" data-testid="last-tested">
+          {lastTested?.ended_at ? (
+            <>
+              Last tested {formatDate(lastTested.ended_at, org.timezone)} ·{" "}
+              <Link
+                href={`/app/exercises/${lastTested.id}/report`}
+                className="underline underline-offset-4"
+              >
+                {lastTested.report ? "after-action report" : "report not written yet"}
+              </Link>
+            </>
+          ) : (
+            <>
+              Not tested yet ·{" "}
+              <Link href="/app/exercises/new" className="underline underline-offset-4">
+                plan an exercise
+              </Link>
+            </>
+          )}
+        </p>
+      </PageHeader>
 
       <PlanEditor key={plan.id} planId={plan.id} sections={plan.sections} readOnly={approved} />
 
