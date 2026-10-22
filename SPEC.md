@@ -324,7 +324,7 @@ Before the free generator goes public:
 - [ ] Cloudflare Turnstile added to the generator form if abuse appears in `events`.
 
 Security hardening before customers pay (founder tasks; the code side is already in place: RLS on every table with cross-org tests, server-only keys, no regulated data collected, hashed IPs, expiring participant tokens, security headers, sanitized markdown, rate limits):
-- [ ] **MFA on the founder's accounts**: Supabase, Vercel, Anthropic Console, GitHub, and the registrar. These accounts are the easiest way into everything else.
+- [x] **MFA on the founder's accounts** (2026-10-22): authenticator or passkey on GitHub, Cloudflare, Vercel and Supabase (organization MFA enforcement on); the Anthropic Console has no MFA setting of its own, so it is used only through Google sign-in with 2-Step Verification. These accounts are the easiest way into everything else.
 - [x] **Supabase Pro with backups** (2026-10-22): daily backups come with Pro and the project no longer pauses; add point-in-time recovery once there is customer data that could not be re-created.
 - [ ] **Database access**: enforce SSL on direct Postgres connections and restrict them to known addresses (Settings > Database); the app itself only uses the Data API. Run Database > Advisors (Security and Performance) after every migration and clear what they flag.
 - [ ] **Keys**: legacy JWT keys disabled, the secret key present only in Vercel, dev key rotated on its 90-day schedule (see the key lifetimes above).
