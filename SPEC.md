@@ -327,7 +327,7 @@ Security hardening before customers pay (founder tasks; the code side is already
 - [x] **MFA on the founder's accounts** (2026-10-22): authenticator or passkey on GitHub, Cloudflare, Vercel and Supabase (organization MFA enforcement on); the Anthropic Console has no MFA setting of its own, so it is used only through Google sign-in with 2-Step Verification. These accounts are the easiest way into everything else.
 - [x] **Supabase Pro with backups** (2026-10-22): daily backups come with Pro and the project no longer pauses; add point-in-time recovery once there is customer data that could not be re-created.
 - [ ] **Database access**: enforce SSL on direct Postgres connections and restrict them to known addresses (Settings > Database); the app itself only uses the Data API. Run Database > Advisors (Security and Performance) after every migration and clear what they flag.
-- [ ] **Keys**: legacy JWT keys disabled, the secret key present only in Vercel, dev key rotated on its 90-day schedule (see the key lifetimes above).
+- [ ] **Keys**: legacy JWT keys disabled (2026-10-22) and the production secrets present only in Vercel; still to keep up: the dev Anthropic key rotated on its 90-day schedule (see the key lifetimes above).
 - [x] **Dependencies**: Dependabot configured 2026-10-22 (`.github/dependabot.yml`, weekly, minor and patch grouped) on the private GitHub repo `Tooviee/Valmius`; the local folder and package keep the `drillday` codename. Merge security updates weekly.
 - [x] **`/.well-known/security.txt`** published 2026-10-22 (`public/.well-known/security.txt`, contact `support@valmius.app`, expires 2027-10-22; renew the date yearly). Answer reports within a few days.
 - [ ] **Use Valmius on Valmius**: write the company's own incident response plan in the product, run a tabletop, keep the report. It is the first thing a buyer's IT manager asks about.
@@ -343,7 +343,7 @@ Credibility, in the order the steps pay off. None of these can start before the 
 - Not certifications, so nobody can sell them as such: HIPAA has no certificate, only a chain of signed business associate agreements and the Security Rule controls; Supabase, Vercel and AWS certifications cover their layers only and can be cited as inherited controls, not as Valmius being certified.
 
 Before Phase 2 (accounts) goes live:
-- [ ] Custom SMTP is live and the sign-in templates point at `/auth/confirm` (see "Domain and email" above); a sign-in from an outside address arrives within a minute.
+- [x] Custom SMTP is live and the sign-in templates point at `/auth/confirm` (done 2026-10-22, see "Domain and email" above); a sign-in from an outside address arrived within a minute.
 - [x] Spend limit raised to $50 on 2026-10-14. Go to $100 (notifications $50 and $80) once paying customers generate plans; one plan costs roughly 38,000 input and 12,000 output tokens.
 - [ ] Privacy page states that no health data or card numbers are collected.
 
