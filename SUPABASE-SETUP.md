@@ -57,7 +57,7 @@ Dashboard > Authentication. The app signs people in with an emailed link and not
 
 ### 5a. URL configuration
 
-- Site URL: `http://localhost:3000` for now; change it to the production URL when you deploy.
+- Site URL: `https://valmius.app` (set 2026-10-22; it was `http://localhost:3000` before the deploy).
 - Redirect URLs: add `http://localhost:3000/**`. When you deploy, add `https://*.vercel.app/**` and `https://valmius.app/**` the same way. The app passes `<site>/auth/confirm` as the redirect target, and Supabase refuses any target that is not on this list.
 
 ### 5b. Email templates (locked until custom SMTP exists)
