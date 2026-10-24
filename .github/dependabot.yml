@@ -1,5 +1,11 @@
-# Weekly dependency updates (SPEC.md section 14, "Dependencies"). Minor and patch bumps arrive
-# as one grouped pull request; majors come one at a time.
+# Dependency updates while the project is parked (SPEC.md section 14, "Dependencies").
+#
+# Version bumps are paused: open-pull-requests-limit 0 stops Dependabot from opening weekly
+# update pull requests, which would otherwise pile up and, with no CI on this repo, could not be
+# merged safely without a local test run. Security updates are unaffected by this file: they are
+# controlled by Settings > Code security > Dependabot security updates and keep arriving.
+#
+# To resume regular updates, set open-pull-requests-limit back to 5.
 version: 2
 updates:
   - package-ecosystem: "npm"
@@ -7,7 +13,7 @@ updates:
     schedule:
       interval: "weekly"
       day: "monday"
-    open-pull-requests-limit: 5
+    open-pull-requests-limit: 0
     groups:
       minor-and-patch:
         update-types: ["minor", "patch"]
