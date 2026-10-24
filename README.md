@@ -21,7 +21,11 @@ Generated for a fictional 30-person SaaS company, Ledgerline. Every person, firm
 - [Incident response plan, 16 pages (PDF)](docs/samples/ledgerline-ir-plan.pdf)
 - [After-action report from a cloud-credential drill, 5 pages (PDF)](docs/samples/ledgerline-after-action-report.pdf)
 
-<!-- Demo video: on github.com, open this file in the editor and drag a .mp4 (under 10 MB) onto the line below. GitHub uploads it and renders a player. -->
+- Demo video: on github.com, open this file in the editor and drag a .mp4 (under 10 MB) onto the line below. GitHub uploads it and renders a player. -->
+
+https://github.com/user-attachments/assets/accb4a3a-65d1-4685-9f47-a4ec60457db4
+
+
 
 ## Why the design looks the way it does
 
